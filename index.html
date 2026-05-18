@@ -1,0 +1,3296 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#ffffff">
+  <meta name="description" content="Kall helps travelers make Korean phone reservations with a deposit-based, per-minute account model.">
+  <title>Kall | Deposit-Based Korean Reservation Help</title>
+  <style>
+    :root {
+      color-scheme: light;
+      --bg: #f7f9fc;
+      --paper: #ffffff;
+      --ink: #101828;
+      --ink-2: #27364a;
+      --muted: #667085;
+      --soft: #eef4ff;
+      --line: #dce3ee;
+      --blue: #245cff;
+      --blue-dark: #153fbd;
+      --teal: #00a78e;
+      --green: #14a46c;
+      --gold: #f2b134;
+      --rose: #e84b68;
+      --shadow: 0 18px 50px rgba(16, 24, 40, .12);
+      --shadow-soft: 0 12px 28px rgba(16, 24, 40, .08);
+      --radius: 8px;
+      --radius-lg: 12px;
+      --max: 1180px;
+      --safe-bottom: env(safe-area-inset-bottom, 0px);
+    }
+
+    * { box-sizing: border-box; }
+    html { scroll-behavior: smooth; background: var(--bg); }
+    body {
+      margin: 0;
+      min-height: 100vh;
+      color: var(--ink);
+      background:
+        linear-gradient(180deg, rgba(36, 92, 255, .06) 0, rgba(255, 255, 255, 0) 360px),
+        var(--bg);
+      font-family: Inter, -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, "Apple SD Gothic Neo", "Noto Sans KR", Arial, sans-serif;
+      letter-spacing: 0;
+      overflow-x: hidden;
+    }
+
+    body::before {
+      content: "";
+      position: fixed;
+      inset: 0;
+      z-index: -1;
+      background:
+        linear-gradient(135deg, var(--stage-a, rgba(36, 92, 255, .09)) 0%, rgba(255,255,255,0) 42%),
+        linear-gradient(215deg, var(--stage-b, rgba(0, 167, 142, .08)) 0%, rgba(255,255,255,0) 48%),
+        var(--bg);
+      transition: background 700ms ease;
+      pointer-events: none;
+    }
+
+    body[data-stage="pricing"] { --stage-a: rgba(242, 177, 52, .14); --stage-b: rgba(36, 92, 255, .08); }
+    body[data-stage="account"] { --stage-a: rgba(0, 167, 142, .14); --stage-b: rgba(36, 92, 255, .07); }
+    body[data-stage="time"] { --stage-a: rgba(36, 92, 255, .1); --stage-b: rgba(232, 75, 104, .09); }
+    body[data-stage="request"] { --stage-a: rgba(20, 164, 108, .12); --stage-b: rgba(242, 177, 52, .11); }
+    body[data-stage="policy"], body[data-stage="faq"] { --stage-a: rgba(17, 24, 39, .08); --stage-b: rgba(36, 92, 255, .09); }
+
+    body.locked { overflow: hidden; }
+    a { color: inherit; text-decoration: none; }
+    button, input, select, textarea { font: inherit; }
+    button { border: 0; cursor: pointer; }
+    img, svg { display: block; }
+    .sr-only {
+      position: absolute;
+      width: 1px;
+      height: 1px;
+      padding: 0;
+      margin: -1px;
+      overflow: hidden;
+      clip: rect(0, 0, 0, 0);
+      white-space: nowrap;
+      border: 0;
+    }
+
+    .site-header {
+      position: sticky;
+      top: 0;
+      z-index: 80;
+      border-bottom: 1px solid rgba(220, 227, 238, .82);
+      background: rgba(255, 255, 255, .9);
+      backdrop-filter: blur(18px);
+    }
+
+    .nav-shell {
+      width: min(100% - 40px, var(--max));
+      min-height: 76px;
+      margin: 0 auto;
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 24px;
+    }
+
+    .brand {
+      display: inline-flex;
+      align-items: center;
+      gap: 12px;
+      min-width: 0;
+      font-weight: 950;
+    }
+
+    .brand-mark {
+      width: 44px;
+      height: 44px;
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border-radius: 50%;
+      color: #ffffff;
+      background: linear-gradient(135deg, #245cff, #00a78e);
+      box-shadow: 0 12px 24px rgba(36, 92, 255, .22);
+      font-size: 22px;
+      line-height: 1;
+    }
+
+    .brand-mark img {
+      width: 100%;
+      height: 100%;
+      object-fit: cover;
+    }
+
+    .brand-copy {
+      display: grid;
+      gap: 2px;
+      min-width: 0;
+    }
+
+    .brand-name {
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .brand-sub {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.15;
+      font-weight: 760;
+      white-space: nowrap;
+    }
+
+    .site-nav {
+      display: flex;
+      align-items: center;
+      gap: 4px;
+      color: #344054;
+      font-size: 14px;
+      font-weight: 780;
+    }
+
+    .site-nav a {
+      min-height: 40px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 12px;
+      border-radius: 999px;
+    }
+
+    .site-nav a:hover { background: #f0f4fb; color: var(--blue-dark); }
+
+    .header-actions {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .lang-switcher {
+      display: inline-flex;
+      align-items: center;
+      gap: 4px;
+      min-height: 42px;
+      padding: 4px;
+      border: 1px solid var(--line);
+      border-radius: 999px;
+      background: rgba(255,255,255,.86);
+    }
+
+    .lang-option {
+      min-width: 38px;
+      min-height: 32px;
+      display: grid;
+      place-items: center;
+      border-radius: 999px;
+      color: #667085;
+      background: transparent;
+      font-size: 12px;
+      font-weight: 900;
+    }
+
+    .lang-option.selected {
+      color: #ffffff;
+      background: #111827;
+      box-shadow: 0 8px 16px rgba(17,24,39,.14);
+    }
+
+    .header-actions .menu-btn { display: none; }
+
+    .btn {
+      min-height: 46px;
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 9px;
+      padding: 0 18px;
+      border-radius: 999px;
+      color: #ffffff;
+      background: var(--blue);
+      box-shadow: 0 12px 24px rgba(36, 92, 255, .24);
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 880;
+      transition: transform .18s ease, box-shadow .18s ease, background .18s ease;
+      white-space: nowrap;
+    }
+
+    .btn:hover { transform: translateY(-1px); background: var(--blue-dark); box-shadow: 0 16px 30px rgba(36, 92, 255, .28); }
+    .btn:active { transform: translateY(0); }
+    .btn.secondary {
+      color: #1d2939;
+      background: #ffffff;
+      border: 1px solid var(--line);
+      box-shadow: none;
+    }
+    .btn.secondary:hover { background: #f7f9fc; color: var(--blue-dark); }
+    .btn.dark {
+      background: #111827;
+      box-shadow: 0 12px 24px rgba(17, 24, 39, .2);
+    }
+    .btn.dark:hover { background: #263143; }
+    .btn.ghost {
+      color: var(--blue-dark);
+      background: transparent;
+      box-shadow: none;
+      border: 1px solid rgba(36, 92, 255, .2);
+    }
+    .btn:disabled {
+      opacity: .55;
+      cursor: not-allowed;
+      transform: none;
+      box-shadow: none;
+    }
+
+    .btn svg, .icon {
+      width: 19px;
+      height: 19px;
+      flex: 0 0 auto;
+    }
+
+    .page-section {
+      width: min(100% - 40px, var(--max));
+      margin: 0 auto;
+      padding: 92px 0;
+      opacity: 0;
+      transform: translateY(18px);
+      transition: opacity .7s ease, transform .7s ease;
+    }
+
+    .page-section.is-visible {
+      opacity: 1;
+      transform: translateY(0);
+    }
+
+    main .page-section:first-child {
+      opacity: 1;
+      transform: none;
+    }
+
+    .hero {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) minmax(420px, .92fr);
+      gap: 58px;
+      align-items: center;
+      min-height: min(760px, calc(100vh - 140px));
+      padding-top: 54px;
+      padding-bottom: 54px;
+    }
+
+    .hero-copy {
+      display: grid;
+      align-content: center;
+      gap: 26px;
+    }
+
+    h1, h2, h3, p { margin-top: 0; }
+    h1 {
+      margin-bottom: 0;
+      max-width: 760px;
+      color: var(--ink);
+      font-size: clamp(48px, 6.4vw, 82px);
+      line-height: .96;
+      font-weight: 950;
+      letter-spacing: 0;
+      overflow-wrap: break-word;
+    }
+
+    .lead {
+      max-width: 660px;
+      margin: 0;
+      color: #344054;
+      font-size: clamp(17px, 1.4vw, 21px);
+      line-height: 1.58;
+      font-weight: 620;
+      overflow-wrap: break-word;
+    }
+
+    .hero-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 12px;
+      align-items: center;
+    }
+
+    .proof-strip {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 12px;
+      max-width: 660px;
+    }
+
+    .proof-item {
+      min-height: 90px;
+      display: grid;
+      gap: 6px;
+      align-content: center;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .75);
+    }
+
+    .proof-item b {
+      color: var(--ink);
+      font-size: 20px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .proof-item span {
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 760;
+    }
+
+    .control-room {
+      position: relative;
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border: 1px solid rgba(220, 227, 238, .88);
+      border-radius: 18px;
+      background: #ffffff;
+      box-shadow: var(--shadow);
+      overflow: hidden;
+    }
+
+    .control-room::before {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background:
+        linear-gradient(90deg, rgba(36, 92, 255, .08), transparent 38%),
+        linear-gradient(180deg, rgba(0, 167, 142, .08), transparent 54%);
+      pointer-events: none;
+    }
+
+    .mock-header,
+    .balance-panel,
+    .task-card,
+    .activity-feed {
+      position: relative;
+      z-index: 1;
+    }
+
+    .mock-header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .9);
+    }
+
+    .mock-title {
+      display: flex;
+      align-items: center;
+      gap: 10px;
+      min-width: 0;
+    }
+
+    .mock-title .brand-mark {
+      width: 36px;
+      height: 36px;
+      font-size: 18px;
+      box-shadow: none;
+    }
+
+    .mock-title b {
+      display: block;
+      font-size: 14px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .mock-title span {
+      display: block;
+      margin-top: 2px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 720;
+    }
+
+    .status-dot {
+      width: 10px;
+      height: 10px;
+      border-radius: 50%;
+      background: var(--green);
+      box-shadow: 0 0 0 6px rgba(20, 164, 108, .13);
+    }
+
+    .balance-panel {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 148px;
+      gap: 18px;
+      align-items: stretch;
+      padding: 18px;
+      border-radius: var(--radius-lg);
+      color: #ffffff;
+      background: linear-gradient(135deg, #163fbc, #245cff 58%, #00a78e);
+      box-shadow: 0 18px 42px rgba(36, 92, 255, .25);
+    }
+
+    .balance-label {
+      display: block;
+      margin-bottom: 8px;
+      color: rgba(255, 255, 255, .78);
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .balance-value {
+      margin-bottom: 10px;
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .balance-panel p {
+      margin: 0;
+      max-width: 300px;
+      color: rgba(255, 255, 255, .82);
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 660;
+    }
+
+    .minute-meter {
+      display: grid;
+      place-items: center;
+      min-height: 148px;
+      border-radius: 50%;
+      background:
+        conic-gradient(#ffffff 0 64%, rgba(255, 255, 255, .24) 64% 100%);
+      position: relative;
+    }
+
+    .minute-meter::after {
+      content: "";
+      position: absolute;
+      inset: 12px;
+      border-radius: 50%;
+      background: #245cff;
+    }
+
+    .minute-meter span {
+      position: relative;
+      z-index: 1;
+      display: grid;
+      gap: 4px;
+      text-align: center;
+      color: #ffffff;
+      font-size: 12px;
+      font-weight: 780;
+    }
+
+    .minute-meter b {
+      font-size: 26px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .task-card {
+      display: grid;
+      gap: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .94);
+    }
+
+    .task-top {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 12px;
+    }
+
+    .task-top b {
+      font-size: 18px;
+      line-height: 1.2;
+      font-weight: 950;
+    }
+
+    .task-top span,
+    .pill {
+      display: inline-flex;
+      align-items: center;
+      min-height: 28px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #076a59;
+      background: rgba(0, 167, 142, .12);
+      font-size: 12px;
+      font-weight: 860;
+      white-space: nowrap;
+    }
+
+    .task-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .task-stat {
+      padding: 12px;
+      border-radius: var(--radius);
+      background: #f7f9fc;
+      border: 1px solid #e8edf5;
+    }
+
+    .task-stat span {
+      display: block;
+      margin-bottom: 6px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 780;
+    }
+
+    .task-stat b {
+      display: block;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.2;
+      font-weight: 920;
+    }
+
+    .activity-feed {
+      display: grid;
+      gap: 10px;
+    }
+
+    .feed-row {
+      display: grid;
+      grid-template-columns: 36px minmax(0, 1fr) auto;
+      gap: 10px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #e8edf5;
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .feed-icon {
+      width: 42px;
+      height: 42px;
+      display: grid;
+      place-items: center;
+      border-radius: 50%;
+      color: #ffffff;
+      background: linear-gradient(135deg, #245cff, #5b8cff);
+      box-shadow: 0 10px 20px rgba(36, 92, 255, .2);
+    }
+
+    .feed-icon.asset {
+      background: #ffffff;
+      border: 1px solid rgba(220, 227, 238, .9);
+      box-shadow: 0 10px 24px rgba(16, 24, 40, .09);
+    }
+
+    .feed-icon.asset img {
+      width: 74%;
+      height: 74%;
+      object-fit: contain;
+      border-radius: 50%;
+    }
+
+    .feed-icon svg {
+      width: 23px;
+      height: 23px;
+      stroke-width: 2.25;
+    }
+
+    .feed-icon.gold {
+      color: #111827;
+      background: linear-gradient(135deg, #ffe18a, #f2b134);
+      box-shadow: 0 10px 20px rgba(242, 177, 52, .22);
+    }
+    .feed-icon.teal {
+      background: linear-gradient(135deg, #00c9a7, #00a78e);
+      box-shadow: 0 10px 20px rgba(0, 167, 142, .2);
+    }
+    .feed-row b {
+      display: block;
+      color: var(--ink);
+      font-size: 13px;
+      font-weight: 900;
+    }
+    .feed-row span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 12px;
+      font-weight: 700;
+    }
+    .feed-row strong {
+      color: var(--ink-2);
+      font-size: 12px;
+      font-weight: 900;
+      white-space: nowrap;
+    }
+
+    .section-head {
+      display: grid;
+      grid-template-columns: minmax(0, .72fr) minmax(280px, .28fr);
+      gap: 28px;
+      align-items: end;
+      margin-bottom: 28px;
+    }
+
+    .section-head h2 {
+      margin-bottom: 0;
+      color: var(--ink);
+      font-size: clamp(34px, 4vw, 54px);
+      line-height: 1.02;
+      font-weight: 950;
+    }
+
+    .section-head p {
+      margin: 0;
+      color: #475467;
+      font-size: 16px;
+      line-height: 1.6;
+      font-weight: 620;
+    }
+
+    .how-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .step {
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .step-number {
+      position: relative;
+      isolation: isolate;
+      overflow: hidden;
+      width: 38px;
+      height: 38px;
+      display: grid;
+      place-items: center;
+      margin-bottom: 18px;
+      border-radius: 50%;
+      color: #ffffff;
+      background: linear-gradient(135deg, #245cff, #6d8bff);
+      font-size: 14px;
+      font-weight: 950;
+      box-shadow: 0 12px 26px rgba(36, 92, 255, .22);
+      animation: stepPulse 4.8s ease-in-out infinite;
+    }
+
+    .step-number::after {
+      content: "";
+      position: absolute;
+      inset: -45%;
+      z-index: -1;
+      background: linear-gradient(120deg, transparent 32%, rgba(255, 255, 255, .58) 50%, transparent 68%);
+      transform: translateX(-80%) rotate(8deg);
+      animation: stepSweep 4.8s ease-in-out infinite;
+    }
+
+    .step:nth-child(2) .step-number {
+      background: linear-gradient(135deg, #00a78e, #34d5bc);
+      box-shadow: 0 12px 26px rgba(0, 167, 142, .22);
+      animation-delay: .45s;
+    }
+    .step:nth-child(3) .step-number {
+      color: #111827;
+      background: linear-gradient(135deg, #f2b134, #ffd86e);
+      box-shadow: 0 12px 26px rgba(242, 177, 52, .24);
+      animation-delay: .9s;
+    }
+    .step:nth-child(4) .step-number {
+      background: linear-gradient(135deg, #111827, #344154);
+      box-shadow: 0 12px 26px rgba(17, 24, 39, .22);
+      animation-delay: 1.35s;
+    }
+
+    @keyframes stepPulse {
+      0%, 100% { transform: translateY(0); filter: saturate(1); }
+      50% { transform: translateY(-2px); filter: saturate(1.16); }
+    }
+
+    @keyframes stepSweep {
+      0%, 34% { transform: translateX(-84%) rotate(8deg); opacity: 0; }
+      46% { opacity: .72; }
+      66%, 100% { transform: translateX(84%) rotate(8deg); opacity: 0; }
+    }
+
+    .step h3 {
+      margin-bottom: 8px;
+      font-size: 19px;
+      line-height: 1.2;
+      font-weight: 940;
+    }
+
+    .step p {
+      margin-bottom: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 620;
+    }
+
+    .pricing-layout {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 16px;
+    }
+
+    .price-card {
+      position: relative;
+      display: grid;
+      align-content: start;
+      min-height: 470px;
+      padding: 22px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+      transition: transform .18s ease, border-color .18s ease, box-shadow .18s ease;
+    }
+
+    .price-card.selected {
+      border-color: rgba(36, 92, 255, .55);
+      box-shadow: 0 0 0 3px rgba(36, 92, 255, .12), var(--shadow);
+      transform: translateY(-3px);
+    }
+
+    .price-ribbon {
+      position: absolute;
+      top: 18px;
+      right: 18px;
+      min-height: 30px;
+      display: inline-flex;
+      align-items: center;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #ffffff;
+      background: var(--rose);
+      font-size: 11px;
+      font-weight: 920;
+    }
+
+    .price-card h3 {
+      margin-bottom: 10px;
+      font-size: 24px;
+      line-height: 1.1;
+      font-weight: 950;
+    }
+
+    .price-card .desc {
+      min-height: 50px;
+      margin-bottom: 18px;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 640;
+    }
+
+    .deposit {
+      margin-bottom: 8px;
+      color: var(--ink);
+      font-size: 34px;
+      line-height: 1;
+      font-weight: 950;
+    }
+
+    .rate {
+      margin-bottom: 18px;
+      color: var(--blue-dark);
+      font-size: 15px;
+      font-weight: 920;
+    }
+
+    .feature-list {
+      display: grid;
+      gap: 10px;
+      margin: 0 0 22px;
+      padding: 0;
+      list-style: none;
+    }
+
+    .feature-list li {
+      position: relative;
+      padding-left: 24px;
+      color: #344054;
+      font-size: 14px;
+      line-height: 1.45;
+      font-weight: 680;
+    }
+
+    .feature-list li::before {
+      content: "";
+      position: absolute;
+      top: .42em;
+      left: 0;
+      width: 12px;
+      height: 12px;
+      border-radius: 50%;
+      background: var(--teal);
+      box-shadow: inset 0 0 0 4px #ffffff, 0 0 0 1px rgba(0, 167, 142, .38);
+    }
+
+    .price-card .btn { margin-top: auto; }
+
+    .console-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .92fr) minmax(360px, .58fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .panel {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .panel.pad { padding: 22px; }
+
+    .panel-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 18px;
+    }
+
+    .panel-head h3 {
+      margin-bottom: 6px;
+      font-size: 24px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .panel-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 620;
+    }
+
+    .form-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .field {
+      display: grid;
+      gap: 7px;
+    }
+
+    .field.full { grid-column: 1 / -1; }
+    label {
+      color: #344054;
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 860;
+    }
+
+    input, select, textarea {
+      width: 100%;
+      min-height: 48px;
+      border: 1px solid #cfd8e6;
+      border-radius: var(--radius);
+      padding: 0 13px;
+      color: var(--ink);
+      background: #ffffff;
+      outline: none;
+      font-size: 14px;
+      font-weight: 640;
+      transition: border-color .18s ease, box-shadow .18s ease;
+    }
+
+    textarea {
+      min-height: 116px;
+      padding-top: 12px;
+      resize: vertical;
+      line-height: 1.5;
+    }
+
+    input:focus, select:focus, textarea:focus {
+      border-color: rgba(36, 92, 255, .74);
+      box-shadow: 0 0 0 3px rgba(36, 92, 255, .12);
+    }
+
+    .form-actions {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      align-items: center;
+      margin-top: 16px;
+    }
+
+    .account-status {
+      display: grid;
+      gap: 12px;
+      padding: 18px;
+      border-radius: var(--radius);
+      color: #ffffff;
+      background: #111827;
+    }
+
+    .account-status.empty {
+      color: #1d2939;
+      background: #f7f9fc;
+      border: 1px dashed #cfd8e6;
+    }
+
+    .account-status .small-label {
+      color: rgba(255, 255, 255, .68);
+      font-size: 12px;
+      font-weight: 840;
+    }
+
+    .account-status.empty .small-label { color: var(--muted); }
+
+    .account-status h3 {
+      margin: 0;
+      font-size: 22px;
+      line-height: 1.18;
+      font-weight: 950;
+    }
+
+    .account-meta {
+      display: grid;
+      gap: 7px;
+      color: rgba(255, 255, 255, .76);
+      font-size: 13px;
+      font-weight: 680;
+      overflow-wrap: anywhere;
+    }
+
+    .account-status.empty .account-meta { color: var(--muted); }
+
+    .balance-summary {
+      display: grid;
+      grid-template-columns: 1fr 1fr;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .balance-box {
+      padding: 13px;
+      border-radius: var(--radius);
+      color: #111827;
+      background: #ffffff;
+    }
+
+    .balance-box span {
+      display: block;
+      margin-bottom: 7px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 840;
+    }
+
+    .balance-box b {
+      display: block;
+      font-size: 18px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .deposit-tools {
+      display: grid;
+      gap: 14px;
+      padding: 18px;
+      border-top: 1px solid var(--line);
+    }
+
+    .segmented {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 8px;
+    }
+
+    .select-btn {
+      min-height: 48px;
+      display: grid;
+      place-items: center;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      color: #344054;
+      background: #ffffff;
+      font-size: 13px;
+      font-weight: 860;
+      text-align: center;
+    }
+
+    .select-btn.selected {
+      color: #ffffff;
+      background: var(--blue);
+      border-color: var(--blue);
+    }
+
+    .payment-grid {
+      display: grid;
+      grid-template-columns: repeat(3, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .payment-option {
+      min-height: 92px;
+      display: grid;
+      justify-items: center;
+      align-content: center;
+      gap: 8px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 860;
+      text-align: center;
+    }
+
+    .payment-option svg { width: 25px; height: 25px; }
+    .payment-option.selected {
+      border-color: rgba(36, 92, 255, .65);
+      box-shadow: 0 0 0 3px rgba(36, 92, 255, .1);
+      color: var(--blue-dark);
+    }
+
+    .bank-info {
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border: 1px solid rgba(0, 167, 142, .24);
+      border-radius: var(--radius);
+      color: #075a4f;
+      background:
+        linear-gradient(135deg, rgba(0, 167, 142, .1), rgba(36, 92, 255, .06)),
+        #ffffff;
+    }
+
+    .bank-info[hidden] { display: none; }
+
+    .bank-info span {
+      color: #38676f;
+      font-size: 12px;
+      font-weight: 840;
+    }
+
+    .bank-info strong {
+      color: #111827;
+      font-size: 18px;
+      line-height: 1.25;
+      font-weight: 950;
+      word-break: keep-all;
+      overflow-wrap: anywhere;
+    }
+
+    .bank-info p {
+      margin: 0;
+      color: #475467;
+      font-size: 12px;
+      line-height: 1.45;
+      font-weight: 650;
+    }
+
+    .estimate-layout {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) 320px;
+      gap: 18px;
+      align-items: start;
+    }
+
+    .estimate-table {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .estimate-row {
+      width: 100%;
+      display: grid;
+      grid-template-columns: minmax(190px, 1fr) 150px 150px 120px;
+      gap: 14px;
+      align-items: center;
+      min-height: 72px;
+      padding: 12px 18px;
+      border-bottom: 1px solid #edf1f7;
+      color: inherit;
+      background: #ffffff;
+      text-align: left;
+    }
+
+    .estimate-row:first-child {
+      min-height: 46px;
+      color: var(--muted);
+      background: #f7f9fc;
+      font-size: 12px;
+      font-weight: 900;
+      text-transform: uppercase;
+      pointer-events: none;
+    }
+
+    .estimate-row:last-child { border-bottom: 0; }
+    .estimate-row:not(:first-child):hover { background: #fbfdff; }
+    .estimate-row.selected { background: #eef4ff; }
+
+    .estimate-name b {
+      display: block;
+      margin-bottom: 4px;
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.25;
+      font-weight: 940;
+    }
+
+    .estimate-name span {
+      display: block;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.35;
+      font-weight: 680;
+    }
+
+    .estimate-row strong {
+      color: var(--ink);
+      font-size: 14px;
+      font-weight: 920;
+    }
+
+    .estimate-note {
+      color: #475467;
+      font-size: 13px;
+      line-height: 1.5;
+      font-weight: 640;
+    }
+
+    .estimator-card {
+      position: sticky;
+      top: 96px;
+      padding: 20px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .estimator-card h3 {
+      margin-bottom: 12px;
+      font-size: 22px;
+      font-weight: 950;
+    }
+
+    .cost-line {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #edf1f7;
+      color: #344054;
+      font-size: 14px;
+      font-weight: 720;
+    }
+
+    .cost-line b {
+      color: var(--ink);
+      font-weight: 950;
+      text-align: right;
+    }
+
+    .fineprint {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.55;
+      font-weight: 620;
+    }
+
+    .example-gallery-wrap {
+      margin-top: 22px;
+    }
+
+    .example-gallery-head {
+      display: flex;
+      align-items: end;
+      justify-content: space-between;
+      gap: 18px;
+      margin-bottom: 14px;
+    }
+
+    .example-gallery-head h3 {
+      margin: 0;
+      font-size: 26px;
+      line-height: 1.12;
+      font-weight: 950;
+    }
+
+    .example-gallery-head p {
+      max-width: 560px;
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 650;
+    }
+
+    .example-gallery {
+      display: grid;
+      grid-template-columns: repeat(5, minmax(0, 1fr));
+      gap: 14px;
+    }
+
+    .service-example-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+      transition: transform .18s ease, box-shadow .18s ease, border-color .18s ease;
+    }
+
+    .service-example-card:hover {
+      transform: translateY(-3px);
+      border-color: rgba(36, 92, 255, .28);
+      box-shadow: 0 18px 36px rgba(16, 24, 40, .09);
+    }
+
+    .service-example-card img {
+      width: 100%;
+      aspect-ratio: 1 / 1;
+      display: block;
+      object-fit: cover;
+      background: #e7edf7;
+    }
+
+    .service-example-body {
+      display: grid;
+      gap: 3px;
+      padding: 11px 12px 13px;
+      text-align: center;
+    }
+
+    .service-example-body b {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.2;
+      font-weight: 940;
+    }
+
+    .service-example-body span {
+      color: var(--blue);
+      font-size: 12px;
+      line-height: 1.2;
+      font-weight: 820;
+    }
+
+    .fx-note {
+      margin: 14px 0 0;
+      color: var(--muted);
+      font-size: 12px;
+      line-height: 1.5;
+      font-weight: 670;
+    }
+
+    .member-portal {
+      margin-top: 18px;
+      padding: 20px;
+      border: 1px solid rgba(220, 227, 238, .9);
+      border-radius: var(--radius-lg);
+      background:
+        radial-gradient(circle at 10% 0%, rgba(36, 92, 255, .1), transparent 30%),
+        radial-gradient(circle at 90% 10%, rgba(0, 167, 142, .1), transparent 28%),
+        #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .member-portal[hidden] { display: none; }
+
+    .portal-head {
+      display: flex;
+      align-items: flex-start;
+      justify-content: space-between;
+      gap: 18px;
+    }
+
+    .portal-head h3 {
+      margin: 0 0 6px;
+      font-size: 25px;
+      line-height: 1.15;
+      font-weight: 950;
+    }
+
+    .portal-head p {
+      margin: 0;
+      color: var(--muted);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 640;
+    }
+
+    .portal-status {
+      display: inline-flex;
+      align-items: center;
+      min-height: 30px;
+      padding: 0 10px;
+      border-radius: 999px;
+      color: #075a4f;
+      background: rgba(0, 167, 142, .12);
+      font-size: 12px;
+      font-weight: 880;
+      white-space: nowrap;
+    }
+
+    .account-tabs {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 8px;
+      margin-top: 16px;
+      padding: 6px;
+      border-radius: var(--radius);
+      background: #f3f6fb;
+    }
+
+    .account-tab {
+      min-height: 42px;
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 0 13px;
+      border: 1px solid transparent;
+      border-radius: 10px;
+      color: #475467;
+      background: transparent;
+      font-size: 13px;
+      font-weight: 860;
+    }
+
+    .account-tab svg {
+      width: 18px;
+      height: 18px;
+      stroke-width: 2.2;
+    }
+
+    .account-tab.active {
+      color: var(--blue-dark);
+      background: #ffffff;
+      border-color: rgba(36, 92, 255, .18);
+      box-shadow: 0 8px 18px rgba(16, 24, 40, .06);
+    }
+
+    .portal-panel {
+      margin-top: 12px;
+      padding: 16px;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: rgba(255, 255, 255, .84);
+    }
+
+    .portal-grid {
+      display: grid;
+      grid-template-columns: repeat(4, minmax(0, 1fr));
+      gap: 10px;
+    }
+
+    .portal-card {
+      display: grid;
+      gap: 7px;
+      padding: 13px;
+      border: 1px solid #edf1f7;
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .portal-card span {
+      color: var(--muted);
+      font-size: 11px;
+      line-height: 1.25;
+      font-weight: 840;
+      text-transform: uppercase;
+    }
+
+    .portal-card b {
+      color: var(--ink);
+      font-size: 15px;
+      line-height: 1.3;
+      font-weight: 940;
+      overflow-wrap: anywhere;
+    }
+
+    .portal-note {
+      margin-top: 12px;
+      padding: 13px;
+      border-radius: var(--radius);
+      color: #344054;
+      background: #f7f9fc;
+      font-size: 13px;
+      line-height: 1.55;
+      font-weight: 650;
+      overflow-wrap: anywhere;
+    }
+
+    .portal-empty {
+      padding: 18px;
+      border: 1px dashed #cfd8e6;
+      border-radius: var(--radius);
+      color: var(--muted);
+      background: #fbfdff;
+      font-size: 14px;
+      line-height: 1.55;
+      font-weight: 700;
+    }
+
+    .ledger-list {
+      display: grid;
+      gap: 8px;
+    }
+
+    .ledger-row {
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 12px;
+      align-items: center;
+      padding: 12px;
+      border: 1px solid #edf1f7;
+      border-radius: var(--radius);
+      background: #ffffff;
+    }
+
+    .ledger-row b {
+      color: var(--ink);
+      font-size: 13px;
+      line-height: 1.35;
+      font-weight: 890;
+    }
+
+    .ledger-row span {
+      display: block;
+      margin-top: 3px;
+      color: var(--muted);
+      font-size: 11px;
+      font-weight: 680;
+    }
+
+    .ledger-row strong {
+      color: var(--blue-dark);
+      font-size: 13px;
+      font-weight: 940;
+      white-space: nowrap;
+    }
+
+    .ledger-row.negative strong { color: #8d2337; }
+
+    .locked-box {
+      display: none;
+      align-items: start;
+      gap: 10px;
+      margin-bottom: 16px;
+      padding: 14px;
+      border: 1px solid rgba(232, 75, 104, .2);
+      border-radius: var(--radius);
+      color: #8d2337;
+      background: #fff4f6;
+      font-size: 13px;
+      line-height: 1.45;
+      font-weight: 720;
+    }
+
+    .locked-box.visible { display: flex; }
+    .locked-box svg { width: 20px; height: 20px; flex: 0 0 auto; }
+
+    .request-grid {
+      display: grid;
+      grid-template-columns: minmax(0, .74fr) minmax(320px, .36fr);
+      gap: 18px;
+      align-items: start;
+    }
+
+    .request-summary {
+      display: grid;
+      gap: 10px;
+    }
+
+    .request-example-card {
+      overflow: hidden;
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: var(--shadow-soft);
+    }
+
+    .request-photo {
+      position: relative;
+      min-height: 210px;
+      overflow: hidden;
+      background: #dfeaff;
+    }
+
+    .request-photo img {
+      width: 100%;
+      height: 100%;
+      min-height: 210px;
+      object-fit: cover;
+      filter: saturate(1.06) contrast(1.04);
+    }
+
+    .request-photo::after {
+      content: "";
+      position: absolute;
+      inset: 0;
+      background: linear-gradient(180deg, rgba(17, 24, 39, 0) 20%, rgba(17, 24, 39, .48) 100%);
+    }
+
+    .example-message {
+      position: absolute;
+      left: 16px;
+      right: 16px;
+      bottom: 16px;
+      z-index: 1;
+      display: grid;
+      gap: 8px;
+      padding: 14px;
+      border-radius: var(--radius);
+      color: #ffffff;
+      background: rgba(17, 24, 39, .72);
+      backdrop-filter: blur(14px);
+    }
+
+    .example-message span {
+      color: rgba(255,255,255,.72);
+      font-size: 12px;
+      font-weight: 820;
+    }
+
+    .example-message b {
+      font-size: 15px;
+      line-height: 1.35;
+      font-weight: 940;
+    }
+
+    .example-steps {
+      display: grid;
+      gap: 10px;
+      padding: 14px;
+    }
+
+    .example-step {
+      display: grid;
+      grid-template-columns: 34px minmax(0, 1fr);
+      gap: 10px;
+      align-items: center;
+      padding: 10px;
+      border-radius: var(--radius);
+      background: #f7f9fc;
+      color: #344054;
+      font-size: 13px;
+      font-weight: 760;
+    }
+
+    .example-step .feed-icon {
+      width: 34px;
+      height: 34px;
+      box-shadow: none;
+    }
+
+    .example-step .feed-icon svg {
+      width: 19px;
+      height: 19px;
+    }
+
+    .summary-row {
+      display: flex;
+      justify-content: space-between;
+      gap: 12px;
+      padding: 12px 0;
+      border-bottom: 1px solid #edf1f7;
+      color: var(--muted);
+      font-size: 13px;
+      font-weight: 740;
+    }
+
+    .summary-row b {
+      color: var(--ink);
+      text-align: right;
+      font-weight: 940;
+    }
+
+    .confirmation {
+      display: none;
+      margin-top: 16px;
+      padding: 16px;
+      border-radius: var(--radius);
+      color: #075a3d;
+      background: rgba(20, 164, 108, .1);
+      border: 1px solid rgba(20, 164, 108, .22);
+      font-size: 14px;
+      line-height: 1.5;
+      font-weight: 740;
+    }
+
+    .confirmation.visible { display: block; }
+
+    .policy-grid {
+      display: grid;
+      grid-template-columns: repeat(2, minmax(0, 1fr));
+      gap: 18px;
+    }
+
+    .policy-list {
+      margin: 0;
+      padding-left: 18px;
+      color: #344054;
+    }
+
+    .policy-list li {
+      margin-bottom: 10px;
+      line-height: 1.55;
+      font-size: 14px;
+      font-weight: 650;
+    }
+
+    .policy-list li:last-child { margin-bottom: 0; }
+
+    .policy-callout {
+      margin-top: 18px;
+      padding: 18px;
+      border: 1px solid rgba(36, 92, 255, .18);
+      border-radius: var(--radius);
+      color: #153fbd;
+      background: #eef4ff;
+      font-size: 14px;
+      line-height: 1.6;
+      font-weight: 720;
+    }
+
+    .faq-list {
+      display: grid;
+      gap: 10px;
+    }
+
+    details {
+      border: 1px solid var(--line);
+      border-radius: var(--radius);
+      background: #ffffff;
+      box-shadow: 0 8px 22px rgba(16, 24, 40, .05);
+    }
+
+    summary {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      gap: 14px;
+      min-height: 64px;
+      padding: 0 18px;
+      list-style: none;
+      cursor: pointer;
+      color: var(--ink);
+      font-size: 16px;
+      font-weight: 900;
+    }
+
+    summary::-webkit-details-marker { display: none; }
+    summary::after {
+      content: "+";
+      color: var(--blue);
+      font-size: 24px;
+      line-height: 1;
+      font-weight: 720;
+    }
+    details[open] summary::after { content: "-"; }
+    details p {
+      margin: 0;
+      padding: 0 18px 18px;
+      color: #475467;
+      font-size: 14px;
+      line-height: 1.62;
+      font-weight: 640;
+    }
+
+    .footer {
+      margin-top: 60px;
+      padding: 40px 0 48px;
+      color: #d7deea;
+      background: #111827;
+    }
+
+    .footer-inner {
+      width: min(100% - 40px, var(--max));
+      margin: 0 auto;
+      display: grid;
+      grid-template-columns: minmax(0, 1fr) auto;
+      gap: 28px;
+      align-items: start;
+    }
+
+    .footer .brand-sub,
+    .footer p {
+      color: #aab5c6;
+    }
+
+    .footer p {
+      max-width: 760px;
+      margin: 14px 0 0;
+      font-size: 13px;
+      line-height: 1.65;
+      font-weight: 620;
+    }
+
+    .footer-links {
+      display: flex;
+      flex-wrap: wrap;
+      justify-content: flex-end;
+      gap: 10px 18px;
+      color: #ffffff;
+      font-size: 13px;
+      font-weight: 780;
+    }
+
+    .toast {
+      position: fixed;
+      z-index: 140;
+      left: 50%;
+      bottom: calc(24px + var(--safe-bottom));
+      width: min(calc(100% - 32px), 520px);
+      min-height: 52px;
+      display: flex;
+      align-items: center;
+      justify-content: center;
+      padding: 12px 18px;
+      border-radius: var(--radius);
+      color: #ffffff;
+      background: rgba(17, 24, 39, .96);
+      box-shadow: 0 16px 34px rgba(17, 24, 39, .22);
+      font-size: 14px;
+      font-weight: 760;
+      text-align: center;
+      opacity: 0;
+      transform: translate(-50%, 16px);
+      pointer-events: none;
+      transition: opacity .2s ease, transform .2s ease;
+    }
+
+    .toast.show {
+      opacity: 1;
+      transform: translate(-50%, 0);
+    }
+
+    @media (max-width: 1060px) {
+      .hero,
+      .console-grid,
+      .estimate-layout,
+      .request-grid {
+        grid-template-columns: 1fr;
+      }
+      .hero { min-height: auto; }
+      .control-room { max-width: 720px; }
+      .estimator-card { position: static; }
+      .how-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .pricing-layout { grid-template-columns: 1fr; }
+      .price-card { min-height: 0; }
+      .example-gallery { grid-template-columns: repeat(3, minmax(0, 1fr)); }
+      .portal-grid { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+    }
+
+    @media (max-width: 820px) {
+      .nav-shell {
+        width: min(100% - 28px, var(--max));
+        min-height: 68px;
+      }
+      .site-nav {
+        position: fixed;
+        top: 68px;
+        left: 0;
+        right: 0;
+        display: none;
+        grid-template-columns: 1fr;
+        gap: 0;
+        padding: 10px 14px 16px;
+        background: #ffffff;
+        border-bottom: 1px solid var(--line);
+        box-shadow: 0 16px 28px rgba(16, 24, 40, .08);
+      }
+      .site-nav.open { display: grid; }
+      .site-nav a {
+        min-height: 48px;
+        border-radius: var(--radius);
+      }
+      .header-actions .menu-btn {
+        display: inline-flex;
+        width: 44px;
+        min-height: 44px;
+        padding: 0;
+      }
+      .header-actions .btn:not(.menu-btn) { display: none; }
+      .page-section {
+        width: min(100% - 28px, var(--max));
+        padding: 64px 0;
+      }
+      .hero {
+        padding-top: 42px;
+        gap: 36px;
+      }
+      .section-head {
+        grid-template-columns: 1fr;
+        gap: 12px;
+      }
+      .example-gallery-head,
+      .portal-head {
+        display: grid;
+      }
+      .proof-strip,
+      .task-grid,
+      .form-grid,
+      .payment-grid,
+      .segmented,
+      .balance-summary,
+      .policy-grid,
+      .footer-inner {
+        grid-template-columns: 1fr;
+      }
+      .balance-panel {
+        grid-template-columns: 1fr;
+      }
+      .minute-meter {
+        width: 148px;
+        justify-self: center;
+      }
+      .estimate-table {
+        display: grid;
+        gap: 10px;
+        border: 0;
+        background: transparent;
+        box-shadow: none;
+      }
+      .estimate-row {
+        grid-template-columns: 1fr;
+        gap: 8px;
+        border: 1px solid var(--line);
+        border-radius: var(--radius);
+        box-shadow: 0 8px 20px rgba(16, 24, 40, .05);
+      }
+      .estimate-row:first-child { display: none; }
+      .example-gallery { grid-template-columns: repeat(2, minmax(0, 1fr)); }
+      .footer-links { justify-content: flex-start; }
+    }
+
+    @media (max-width: 520px) {
+      h1 { font-size: clamp(35px, 9.6vw, 39px); line-height: 1.04; }
+      .lead { font-size: 16px; }
+      .brand-sub { display: none; }
+      .hero-actions { display: grid; grid-template-columns: 1fr; }
+      .hero-actions .btn,
+      .form-actions .btn,
+      .price-card .btn,
+      .deposit-tools .btn {
+        width: 100%;
+      }
+      .how-grid { grid-template-columns: 1fr; }
+      .panel-head { display: grid; }
+      .portal-grid,
+      .example-gallery { grid-template-columns: 1fr; }
+      .account-tabs { display: grid; }
+      .balance-value { font-size: 30px; }
+      .task-top { display: grid; }
+      .feed-row { grid-template-columns: 36px minmax(0, 1fr); }
+      .feed-row strong { grid-column: 2; }
+      summary { font-size: 15px; }
+    }
+
+    @media (prefers-reduced-motion: reduce) {
+      html { scroll-behavior: auto; }
+      *, *::before, *::after {
+        animation-duration: .01ms !important;
+        animation-iteration-count: 1 !important;
+        transition-duration: .01ms !important;
+        scroll-behavior: auto !important;
+      }
+    }
+  </style>
+</head>
+<body>
+  <header class="site-header">
+    <div class="nav-shell">
+      <a class="brand" href="#top" aria-label="Kall home">
+        <span class="brand-mark" aria-hidden="true"><img src="./logo.png" alt="" onerror="this.remove(); this.parentElement.textContent='K';"></span>
+        <span class="brand-copy">
+          <span class="brand-name">Kall</span>
+          <span class="brand-sub" data-i18n="brandSub">Korean reservation assistant</span>
+        </span>
+      </a>
+      <nav class="site-nav" id="siteNav" aria-label="Main navigation">
+        <a href="#how" data-i18n="navHow">How it works</a>
+        <a href="#pricing" data-i18n="navPricing">Pricing</a>
+        <a href="#account" data-i18n="navAccount">Account</a>
+        <a href="#time" data-i18n="navTime">Time estimates</a>
+        <a href="#request" data-i18n="navRequest">Request</a>
+        <a href="#faq" data-i18n="navFaq">FAQ</a>
+      </nav>
+      <div class="header-actions">
+        <div class="lang-switcher" role="group" aria-label="Language">
+          <button class="lang-option selected" type="button" data-set-lang="en">EN</button>
+          <button class="lang-option" type="button" data-set-lang="ko">KO</button>
+          <button class="lang-option" type="button" data-set-lang="ja">JP</button>
+          <button class="lang-option" type="button" data-set-lang="zh">CN</button>
+        </div>
+        <a class="btn secondary" href="#account" data-i18n="navSignup">Sign up</a>
+        <a class="btn" href="#account">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 5v14M5 12h14" stroke="currentColor" stroke-width="2.4" stroke-linecap="round"/></svg>
+          <span data-i18n="navDeposit">Add deposit</span>
+        </a>
+        <button class="btn secondary menu-btn" type="button" id="menuBtn" aria-label="Open navigation" aria-expanded="false">
+          <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 7h14M5 12h14M5 17h14" stroke="currentColor" stroke-width="2.3" stroke-linecap="round"/></svg>
+        </button>
+      </div>
+    </div>
+  </header>
+
+  <main id="top">
+    <section class="page-section hero">
+      <div class="hero-copy">
+        <h1 data-i18n="heroTitle">Kall reservations, funded by minutes.</h1>
+        <p class="lead" data-i18n="heroLead">Create a lightweight account, add a refundable deposit, and use Kall by the minute for Korean phone reservations, schedule changes, venue checks, and urgent call coordination.</p>
+        <div class="hero-actions">
+          <a class="btn" href="#account">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M5 12h14M13 6l6 6-6 6" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"/></svg>
+            <span data-i18n="heroPrimary">Create account</span>
+          </a>
+          <a class="btn secondary" href="#time" data-i18n="heroSecondary">See expected minutes</a>
+        </div>
+        <div class="proof-strip" aria-label="Kall account model summary">
+          <div class="proof-item"><b data-i18n="proofOneValue">0</b><span data-i18n="proofOneLabel">monthly membership fees</span></div>
+          <div class="proof-item"><b data-i18n="proofTwoValue">3-8 min</b><span data-i18n="proofTwoLabel">typical dinner reservation call</span></div>
+          <div class="proof-item"><b data-i18n="proofThreeValue">Refundable</b><span data-i18n="proofThreeLabel">unused eligible account balance</span></div>
+        </div>
+      </div>
+
+      <div class="control-room" aria-label="Kall account dashboard preview">
+        <div class="mock-header">
+          <div class="mock-title">
+            <span class="brand-mark" aria-hidden="true"><img src="./logo.png" alt="" onerror="this.remove(); this.parentElement.textContent='K';"></span>
+            <span><b data-i18n="mockAccountTitle">Kall Account</b><span data-i18n="mockAccountSub">Live balance and request tracker</span></span>
+          </div>
+          <span class="status-dot" aria-hidden="true"></span>
+        </div>
+
+        <div class="balance-panel">
+          <div>
+            <span class="balance-label" data-i18n="mockBalanceLabel">Available deposit</span>
+            <div class="balance-value" id="mockBalanceValue">KRW 142,500</div>
+            <p data-i18n="mockBalanceCopy">Minutes are deducted only while Kall is actively working on your request.</p>
+          </div>
+          <div class="minute-meter" aria-hidden="true"><span><b>95</b><span data-i18n="mockMinutesLeft">minutes left</span></span></div>
+        </div>
+
+        <div class="task-card">
+          <div class="task-top">
+            <b data-i18n="mockTaskTitle">Saturday dinner reservation</b>
+            <span data-i18n="mockTaskStatus">Calling now</span>
+          </div>
+          <div class="task-grid">
+            <div class="task-stat"><span data-i18n="mockScope">Scope</span><b data-i18n="mockScopeValue">Restaurant</b></div>
+            <div class="task-stat"><span data-i18n="mockEstimate">Estimate</span><b data-i18n="mockEstimateValue">3-8 min</b></div>
+            <div class="task-stat"><span data-i18n="mockLimit">Limit</span><b data-i18n="mockLimitValue">15 min max</b></div>
+          </div>
+        </div>
+
+        <div class="activity-feed">
+          <div class="feed-row">
+            <span class="feed-icon asset" aria-hidden="true"><img src="./reception.png" alt=""></span>
+            <span><b data-i18n="feedAccountTitle">Account created</b><span data-i18n="feedAccountSub">Name, email, and phone only</span></span>
+            <strong data-i18n="feedDone">Done</strong>
+          </div>
+          <div class="feed-row">
+            <span class="feed-icon asset" aria-hidden="true"><img src="./pay.png" alt=""></span>
+            <span><b data-i18n="feedDepositTitle">Deposit charged</b><span data-i18n="feedDepositSub">Credit card, PayPal, or bank transfer</span></span>
+            <strong id="feedDepositValue">KRW 180,000</strong>
+          </div>
+          <div class="feed-row">
+            <span class="feed-icon asset" aria-hidden="true"><img src="./result.png" alt=""></span>
+            <span><b data-i18n="feedTimeTitle">Time used</b><span data-i18n="feedTimeSub">Itemized after every request</span></span>
+            <strong data-i18n="feedTimeValue">6 min</strong>
+          </div>
+        </div>
+      </div>
+    </section>
+
+    <section class="page-section" id="how">
+      <div class="section-head">
+        <h2 data-i18n="howTitle">Start with an account, then pay only for active work.</h2>
+        <p data-i18n="howLead">The new Kall flow is deposit-based. Users sign up before requesting, charge a balance, set a maximum minute limit, and receive an itemized time summary after each request.</p>
+      </div>
+      <div class="how-grid">
+        <article class="step">
+          <span class="step-number">1</span>
+          <h3 data-i18n="stepOneTitle">Create account</h3>
+          <p data-i18n="stepOneCopy">Collect only full name, email, and phone number. No password or membership application is required on this page.</p>
+        </article>
+        <article class="step">
+          <span class="step-number">2</span>
+          <h3 data-i18n="stepTwoTitle">Add deposit</h3>
+          <p data-i18n="stepTwoCopy">Choose a package and pay by credit card, PayPal, or Korean bank transfer. The balance converts into usable Kall minutes.</p>
+        </article>
+        <article class="step">
+          <span class="step-number">3</span>
+          <h3 data-i18n="stepThreeTitle">Send request</h3>
+          <p data-i18n="stepThreeCopy">Submit the venue, date, people, notes, and a maximum time limit. Kall confirms before accepting third-party fees.</p>
+        </article>
+        <article class="step">
+          <span class="step-number">4</span>
+          <h3 data-i18n="stepFourTitle">Track usage</h3>
+          <p data-i18n="stepFourCopy">Every completed request shows minutes used, remaining balance, call result, and refund-eligible unused credit.</p>
+        </article>
+      </div>
+    </section>
+
+    <section class="page-section" id="pricing">
+      <div class="section-head">
+        <h2 data-i18n="pricingTitle">Deposit packages with clear per-minute rates.</h2>
+        <p data-i18n="pricingLead">These packages replace the old one-time booking fee. The larger the deposit, the lower the per-minute rate and the longer the account validity window.</p>
+      </div>
+      <div class="pricing-layout" id="pricingCards" aria-label="Deposit packages"></div>
+      <p class="fx-note" id="fxNote"></p>
+    </section>
+
+    <section class="page-section" id="account">
+      <div class="section-head">
+        <h2 data-i18n="accountTitle">Sign up, then charge your Kall balance.</h2>
+        <p data-i18n="accountLead">The request form stays locked until a user profile exists and the account has usable deposit credit.</p>
+      </div>
+      <div class="console-grid">
+        <div class="panel pad">
+          <div class="panel-head">
+            <div>
+              <h3 data-i18n="signupTitle">Create account</h3>
+              <p data-i18n="signupLead">Required account fields are intentionally limited to name, email, and phone number.</p>
+            </div>
+            <span class="pill" id="accountPill">Not signed up</span>
+          </div>
+          <form id="signupForm" novalidate>
+            <div class="form-grid">
+              <div class="field">
+                <label for="fullName" data-i18n="fullNameLabel">Full name</label>
+                <input id="fullName" name="fullName" autocomplete="name" placeholder="Jane Miller" data-i18n-placeholder="fullNamePlaceholder" required>
+              </div>
+              <div class="field">
+                <label for="email" data-i18n="emailLabel">Email</label>
+                <input id="email" name="email" type="email" autocomplete="email" placeholder="jane@example.com" data-i18n-placeholder="emailPlaceholder" required>
+              </div>
+              <div class="field full">
+                <label for="phone" data-i18n="phoneLabel">Phone number</label>
+                <input id="phone" name="phone" inputmode="tel" autocomplete="tel" placeholder="+82 10 1234 5678" data-i18n-placeholder="phonePlaceholder" required>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn" type="submit">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+                <span data-i18n="saveAccount">Save account</span>
+              </button>
+              <button class="btn secondary" type="button" id="resetAccountBtn" data-i18n="resetDemo">Reset demo data</button>
+            </div>
+          </form>
+        </div>
+
+        <aside class="panel" aria-label="Account balance">
+          <div class="account-status empty" id="accountStatus">
+            <span class="small-label">Kall account</span>
+            <h3>Create an account to begin.</h3>
+            <div class="account-meta">Your profile and deposit balance will appear here.</div>
+          </div>
+          <div class="deposit-tools">
+            <div class="field">
+              <label data-i18n="depositPackageLabel">Deposit package</label>
+              <div class="segmented" id="packageButtons"></div>
+            </div>
+            <div class="field">
+              <label data-i18n="paymentMethodLabel">Payment method</label>
+              <div class="payment-grid" id="paymentMethods" aria-label="Payment methods"></div>
+            </div>
+            <div class="bank-info" id="bankInfo" hidden>
+              <span data-i18n="bankInfoLabel">Bank transfer account</span>
+              <strong>493601-01-223177 국민은행 유건호</strong>
+              <p data-i18n="bankInfoCopy">After transfer, Kall manually confirms the deposit and updates your balance.</p>
+            </div>
+            <button class="btn dark" type="button" id="addDepositBtn">
+              <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v10H4z" stroke="currentColor" stroke-width="2.2"/><path d="M12 10v4M10 12h4" stroke="currentColor" stroke-width="2.2" stroke-linecap="round"/></svg>
+              <span data-i18n="addSelectedDeposit">Add selected deposit</span>
+            </button>
+            <p class="fineprint" data-i18n="paymentFineprint">Credit card and PayPal deposits can include external processing or FX costs. Bank transfers are confirmed manually after the transfer is received.</p>
+          </div>
+        </aside>
+      </div>
+      <div class="member-portal" id="memberPortal" hidden>
+        <div class="portal-head">
+          <div>
+            <h3 data-i18n="portalTitle">Reservation detail dashboard</h3>
+            <p data-i18n="portalLead">After sign-up, users can review reservation details, balance movement, and account information in one place.</p>
+          </div>
+          <span class="portal-status" data-i18n="portalLoggedIn">Logged in</span>
+        </div>
+        <div class="account-tabs" role="tablist" aria-label="Account dashboard tabs">
+          <button class="account-tab" type="button" data-account-tab="details" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M6 4h12v16H6z" stroke="currentColor" stroke-linejoin="round"/><path d="M9 8h6M9 12h6M9 16h3" stroke="currentColor" stroke-linecap="round"/></svg>
+            <span data-i18n="tabDetails">Reservation details</span>
+          </button>
+          <button class="account-tab" type="button" data-account-tab="billing" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v10H4z" stroke="currentColor" stroke-linejoin="round"/><path d="M7 11h6M16 14h1" stroke="currentColor" stroke-linecap="round"/></svg>
+            <span data-i18n="tabBilling">Billing history</span>
+          </button>
+          <button class="account-tab" type="button" data-account-tab="profile" role="tab">
+            <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M12 12a4 4 0 1 0 0-8 4 4 0 0 0 0 8ZM4.5 20a7.5 7.5 0 0 1 15 0" stroke="currentColor" stroke-linecap="round"/></svg>
+            <span data-i18n="tabProfile">Profile</span>
+          </button>
+        </div>
+        <div class="portal-panel" id="accountTabPanel" role="tabpanel"></div>
+      </div>
+    </section>
+
+    <section class="page-section" id="time">
+      <div class="section-head">
+        <h2 data-i18n="timeTitle">How much time do Kall requests take?</h2>
+        <p data-i18n="timeLead">Use this estimate table before topping up. The selected package rate updates the estimated cost range, so users understand how quickly the deposit may be used.</p>
+      </div>
+      <div class="estimate-layout">
+        <div class="estimate-table" id="estimateTable" aria-label="Kall time estimates"></div>
+        <aside class="estimator-card" aria-label="Selected estimate">
+          <h3 data-i18n="selectedEstimateTitle">Selected estimate</h3>
+          <div class="cost-line"><span data-i18n="calcRequestType">Request type</span><b id="calcName">Dinner reservation</b></div>
+          <div class="cost-line"><span data-i18n="calcExpectedMinutes">Expected minutes</span><b id="calcMinutes">3-8 min</b></div>
+          <div class="cost-line"><span data-i18n="calcPackageRate">Package rate</span><b id="calcRate">KRW 1,500/min</b></div>
+          <div class="cost-line"><span data-i18n="calcEstimatedCost">Estimated cost</span><b id="calcCost">KRW 4,500-12,000</b></div>
+          <p class="fineprint" data-i18n="estimateFineprint">Estimates are not guarantees. Kall deducts actual active work time and can stop at your requested maximum limit.</p>
+        </aside>
+      </div>
+      <div class="example-gallery-wrap">
+        <div class="example-gallery-head">
+          <h3 data-i18n="exampleGalleryTitle">Request examples with expected time</h3>
+          <p data-i18n="exampleGalleryLead">Use these visual examples to understand how common requests consume the prepaid balance.</p>
+        </div>
+        <div class="example-gallery" id="exampleGallery" aria-label="Common Kall request examples"></div>
+      </div>
+    </section>
+
+    <section class="page-section" id="request">
+      <div class="section-head">
+        <h2 data-i18n="requestTitle">Submit a reservation request after funding the account.</h2>
+        <p data-i18n="requestLead">The form mirrors the original Kall booking flow but uses account balance instead of a fixed checkout per reservation.</p>
+      </div>
+      <div class="locked-box" id="lockedBox">
+        <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 10V8a5 5 0 0 1 10 0v2M6 10h12v10H6z" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/></svg>
+        <span data-i18n="lockedCopy">Create an account and add deposit credit before submitting a Kall request.</span>
+      </div>
+      <div class="request-grid">
+        <div class="panel pad">
+          <form id="requestForm" novalidate>
+            <div class="form-grid">
+              <div class="field">
+                <label for="requestType" data-i18n="requestTypeLabel">Request type</label>
+                <select id="requestType" name="requestType"></select>
+              </div>
+              <div class="field">
+                <label for="maxMinutes" data-i18n="maxMinutesLabel">Maximum minutes allowed</label>
+                <input id="maxMinutes" name="maxMinutes" type="number" min="5" max="120" value="15" required>
+              </div>
+              <div class="field">
+                <label for="placeName" data-i18n="placeNameLabel">Place or business name</label>
+                <input id="placeName" name="placeName" autocomplete="organization" placeholder="Mingles Seoul" data-i18n-placeholder="placeNamePlaceholder" required>
+              </div>
+              <div class="field">
+                <label for="placeLink" data-i18n="placeLinkLabel">Map, Instagram, or website link</label>
+                <input id="placeLink" name="placeLink" inputmode="url" placeholder="https://maps.google.com/..." data-i18n-placeholder="placeLinkPlaceholder" required>
+              </div>
+              <div class="field">
+                <label for="preferredDate" data-i18n="preferredDateLabel">Preferred date</label>
+                <input id="preferredDate" name="preferredDate" type="date" required>
+              </div>
+              <div class="field">
+                <label for="preferredTime" data-i18n="preferredTimeLabel">Preferred time</label>
+                <input id="preferredTime" name="preferredTime" type="time" value="19:00" required>
+              </div>
+              <div class="field">
+                <label for="people" data-i18n="peopleLabel">People</label>
+                <input id="people" name="people" inputmode="numeric" value="2" required>
+              </div>
+              <div class="field">
+                <label for="bookingName" data-i18n="bookingNameLabel">Name for reservation</label>
+                <input id="bookingName" name="bookingName" autocomplete="name" placeholder="Jane" data-i18n-placeholder="bookingNamePlaceholder" required>
+              </div>
+              <div class="field full">
+                <label for="requestNote" data-i18n="requestNoteLabel">What should Kall say or check?</label>
+                <textarea id="requestNote" name="requestNote" placeholder="Please ask for a table for two, check cancellation policy, and message me before confirming any deposit." data-i18n-placeholder="requestNotePlaceholder"></textarea>
+              </div>
+            </div>
+            <div class="form-actions">
+              <button class="btn" type="submit">
+                <svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 12 20 5l-5 14-3-6-8-1Z" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/></svg>
+                <span data-i18n="submitRequest">Submit request</span>
+              </button>
+              <a class="btn secondary" href="#account" data-i18n="addMoreCredit">Add more credit</a>
+            </div>
+            <div class="confirmation" id="confirmationBox" role="status"></div>
+          </form>
+        </div>
+
+        <aside class="panel pad request-summary">
+          <div class="request-example-card">
+            <div class="request-photo">
+              <img src="https://images.pexels.com/photos/5086613/pexels-photo-5086613.jpeg?auto=compress&amp;cs=tinysrgb&amp;w=900" alt="" aria-hidden="true">
+              <div class="example-message">
+                <span data-i18n="examplePhotoLabel">Example request</span>
+                <b data-i18n="examplePhotoCopy">"Please reserve a table for two at 7 PM and ask before confirming any deposit."</b>
+              </div>
+            </div>
+            <div class="example-steps">
+              <div class="example-step"><span class="feed-icon asset" aria-hidden="true"><img src="./reception.png" alt=""></span><span data-i18n="exampleStepOne">Kall checks the request details first.</span></div>
+              <div class="example-step"><span class="feed-icon asset" aria-hidden="true"><img src="./pay.png" alt=""></span><span data-i18n="exampleStepTwo">Only active minutes are deducted.</span></div>
+              <div class="example-step"><span class="feed-icon asset" aria-hidden="true"><img src="./result.png" alt=""></span><span data-i18n="exampleStepThree">You receive a result summary and remaining balance.</span></div>
+            </div>
+          </div>
+          <div class="panel-head">
+            <div>
+              <h3 data-i18n="requestPreviewTitle">Request cost preview</h3>
+              <p data-i18n="requestPreviewLead">Calculated from your selected package and request estimate.</p>
+            </div>
+          </div>
+          <div class="summary-row"><span data-i18n="summarySelectedType">Selected type</span><b id="summaryType">Dinner reservation</b></div>
+          <div class="summary-row"><span data-i18n="summaryExpectedTime">Expected work time</span><b id="summaryMinutes">3-8 min</b></div>
+          <div class="summary-row"><span data-i18n="summaryCostRange">Cost range</span><b id="summaryCost">KRW 4,500-12,000</b></div>
+          <div class="summary-row"><span data-i18n="summaryCurrentBalance">Current balance</span><b id="summaryBalance">KRW 0</b></div>
+          <p class="fineprint" data-i18n="requestFineprint">Venue deposits, tickets, products, food, delivery, or third-party cancellation fees are separate from Kall service time and require your approval first.</p>
+        </aside>
+      </div>
+    </section>
+
+    <section class="page-section" id="policy">
+      <div class="section-head">
+        <h2 data-i18n="policyTitle">Transparent charging and refund rules.</h2>
+        <p data-i18n="policyLead">Kall should state exactly what is charged, what is not charged, and how unused deposit credit is refunded.</p>
+      </div>
+      <div class="policy-grid">
+        <article class="panel pad">
+          <div class="panel-head"><div><h3 data-i18n="chargedTitle">Time charged</h3><p data-i18n="chargedLead">Only active handling time is deducted.</p></div></div>
+          <ul class="policy-list" id="chargedList"></ul>
+        </article>
+        <article class="panel pad">
+          <div class="panel-head"><div><h3 data-i18n="notChargedTitle">Time not charged</h3><p data-i18n="notChargedLead">No deduction when Kall is not actively working.</p></div></div>
+          <ul class="policy-list" id="notChargedList"></ul>
+        </article>
+      </div>
+      <div class="policy-callout" data-i18n="refundPolicyCopy">
+        Refund policy: Unused eligible deposit credit can be refunded to the original payment method or by bank transfer after identity and payment verification. Used minutes, third-party costs already paid with your approval, and non-refundable processor or FX fees are not refunded unless the provider returns them to Kall. Starter and Standard balances are automatically scheduled for refund at the end of their validity window unless you top up to extend the account. Promotional bonus minutes expire and have no cash value.
+      </div>
+    </section>
+
+    <section class="page-section" id="faq">
+      <div class="section-head">
+        <h2 data-i18n="faqTitle">FAQ</h2>
+        <p data-i18n="faqLead">The FAQ is built into this single-page version so users can understand pricing, refunds, service limits, and payment rules before signing up.</p>
+      </div>
+      <div class="faq-list" id="faqList"></div>
+    </section>
+  </main>
+
+  <footer class="footer">
+    <div class="footer-inner">
+      <div>
+        <a class="brand" href="#top" aria-label="Kall home">
+          <span class="brand-mark" aria-hidden="true"><img src="./logo.png" alt="" onerror="this.remove(); this.parentElement.textContent='K';"></span>
+          <span class="brand-copy">
+            <span class="brand-name">Kall</span>
+            <span class="brand-sub" data-i18n="footerSub">Deposit-based Korean reservation support</span>
+          </span>
+        </a>
+        <p data-i18n="footerCopy">Kall service time is separate from venue deposits, product purchases, tickets, delivery fees, cancellation penalties, and other third-party costs. Kall provides communication support and does not guarantee business availability or reservation acceptance.</p>
+      </div>
+      <div class="footer-links">
+        <a href="#pricing" data-i18n="navPricing">Pricing</a>
+        <a href="#policy" data-i18n="footerRefunds">Refunds</a>
+        <a href="#faq" data-i18n="navFaq">FAQ</a>
+        <a href="#account" data-i18n="heroPrimary">Create account</a>
+      </div>
+    </div>
+  </footer>
+
+  <div class="toast" id="toast" role="status" aria-live="polite"></div>
+
+  <script>
+    const i18n = {
+      en: {
+        pageTitle: "Kall | Deposit-Based Korean Reservation Help",
+        pageDescription: "Kall helps travelers make Korean phone reservations with a deposit-based, per-minute account model.",
+        brandSub: "Korean reservation assistant",
+        navHow: "How it works", navPricing: "Pricing", navAccount: "Account", navTime: "Time estimates", navRequest: "Request", navFaq: "FAQ", navSignup: "Sign up", navDeposit: "Add deposit",
+        heroTitle: "Kall reservations, funded by minutes.",
+        heroLead: "Create a lightweight account, add a refundable deposit, and use Kall by the minute for Korean phone reservations, schedule changes, venue checks, and urgent call coordination.",
+        heroPrimary: "Create account", heroSecondary: "See expected minutes",
+        proofOneValue: "0", proofOneLabel: "monthly membership fees", proofTwoValue: "3-8 min", proofTwoLabel: "typical dinner reservation call", proofThreeValue: "Refundable", proofThreeLabel: "unused eligible account balance",
+        mockAccountTitle: "Kall Account", mockAccountSub: "Live balance and request tracker", mockBalanceLabel: "Available deposit", mockBalanceCopy: "Minutes are deducted only while Kall is actively working on your request.", mockMinutesLeft: "minutes left",
+        mockTaskTitle: "Saturday dinner reservation", mockTaskStatus: "Calling now", mockScope: "Scope", mockScopeValue: "Restaurant", mockEstimate: "Estimate", mockEstimateValue: "3-8 min", mockLimit: "Limit", mockLimitValue: "15 min max",
+        feedAccountTitle: "Account created", feedAccountSub: "Name, email, and phone only", feedDepositTitle: "Deposit charged", feedDepositSub: "Credit card, PayPal, or bank transfer", feedTimeTitle: "Time used", feedTimeSub: "Itemized after every request", feedTimeValue: "6 min", feedDone: "Done",
+        howTitle: "Start with an account, then pay only for active work.", howLead: "The new Kall flow is deposit-based. Users sign up before requesting, charge a balance, set a maximum minute limit, and receive an itemized time summary after each request.",
+        stepOneTitle: "Create account", stepOneCopy: "Collect only full name, email, and phone number. No password or membership application is required on this page.",
+        stepTwoTitle: "Add deposit", stepTwoCopy: "Choose a package and pay by credit card, PayPal, or Korean bank transfer. The balance converts into usable Kall minutes.",
+        stepThreeTitle: "Send request", stepThreeCopy: "Submit the venue, date, people, notes, and a maximum time limit. Kall confirms before accepting third-party fees.",
+        stepFourTitle: "Track usage", stepFourCopy: "Every completed request shows minutes used, remaining balance, call result, and refund-eligible unused credit.",
+        pricingTitle: "Deposit packages with clear per-minute rates.", pricingLead: "These packages replace the old one-time booking fee. The larger the deposit, the lower the per-minute rate and the longer the account validity window.",
+        accountTitle: "Sign up, then charge your Kall balance.", accountLead: "The request form stays locked until a user profile exists and the account has usable deposit credit.",
+        signupTitle: "Create account", signupLead: "Required account fields are intentionally limited to name, email, and phone number.",
+        fullNameLabel: "Full name", fullNamePlaceholder: "Jane Miller", emailLabel: "Email", emailPlaceholder: "jane@example.com", phoneLabel: "Phone number", phonePlaceholder: "+82 10 1234 5678",
+        saveAccount: "Save account", resetDemo: "Reset demo data", depositPackageLabel: "Deposit package", paymentMethodLabel: "Payment method", addSelectedDeposit: "Add selected deposit",
+        bankInfoLabel: "Bank transfer account", bankInfoCopy: "After transfer, Kall manually confirms the deposit and updates your balance.",
+        paymentFineprint: "Credit card and PayPal deposits can include external processing or FX costs. Bank transfers are confirmed manually after the transfer is received.",
+        timeTitle: "How much time do Kall requests take?", timeLead: "Use this estimate table before topping up. The selected package rate updates the estimated cost range, so users understand how quickly the deposit may be used.",
+        selectedEstimateTitle: "Selected estimate", calcRequestType: "Request type", calcExpectedMinutes: "Expected minutes", calcPackageRate: "Package rate", calcEstimatedCost: "Estimated cost",
+        estimateFineprint: "Estimates are not guarantees. Kall deducts actual active work time and can stop at your requested maximum limit.",
+        exampleGalleryTitle: "Request examples with expected time", exampleGalleryLead: "Use these visual examples to understand how common requests consume the prepaid balance.",
+        requestTitle: "Submit a reservation request after funding the account.", requestLead: "The form mirrors the original Kall booking flow but uses account balance instead of a fixed checkout per reservation.",
+        lockedCopy: "Create an account and add deposit credit before submitting a Kall request.",
+        requestTypeLabel: "Request type", maxMinutesLabel: "Maximum minutes allowed", placeNameLabel: "Place or business name", placeNamePlaceholder: "Mingles Seoul", placeLinkLabel: "Map, Instagram, or website link", placeLinkPlaceholder: "https://maps.google.com/...",
+        preferredDateLabel: "Preferred date", preferredTimeLabel: "Preferred time", peopleLabel: "People", bookingNameLabel: "Name for reservation", bookingNamePlaceholder: "Jane",
+        requestNoteLabel: "What should Kall say or check?", requestNotePlaceholder: "Please ask for a table for two, check cancellation policy, and message me before confirming any deposit.",
+        submitRequest: "Submit request", addMoreCredit: "Add more credit",
+        examplePhotoLabel: "Example request", examplePhotoCopy: "\"Please reserve a table for two at 7 PM and ask before confirming any deposit.\"", exampleStepOne: "Kall checks the request details first.", exampleStepTwo: "Only active minutes are deducted.", exampleStepThree: "You receive a result summary and remaining balance.",
+        requestPreviewTitle: "Request cost preview", requestPreviewLead: "Calculated from your selected package and request estimate.",
+        summarySelectedType: "Selected type", summaryExpectedTime: "Expected work time", summaryCostRange: "Cost range", summaryCurrentBalance: "Current balance",
+        requestFineprint: "Venue deposits, tickets, products, food, delivery, or third-party cancellation fees are separate from Kall service time and require your approval first.",
+        policyTitle: "Transparent charging and refund rules.", policyLead: "Kall should state exactly what is charged, what is not charged, and how unused deposit credit is refunded.",
+        chargedTitle: "Time charged", chargedLead: "Only active handling time is deducted.", notChargedTitle: "Time not charged", notChargedLead: "No deduction when Kall is not actively working.",
+        refundPolicyCopy: "Refund policy: Unused eligible deposit credit can be refunded to the original payment method or by bank transfer after identity and payment verification. Used minutes, third-party costs already paid with your approval, and non-refundable processor or FX fees are not refunded unless the provider returns them to Kall. Starter and Standard balances are automatically scheduled for refund at the end of their validity window unless you top up to extend the account. Promotional bonus minutes expire and have no cash value.",
+        faqTitle: "FAQ", faqLead: "The FAQ is built into this single-page version so users can understand pricing, refunds, service limits, and payment rules before signing up.",
+        portalTitle: "Reservation detail dashboard", portalLead: "After sign-up, users can review reservation details, balance movement, and account information in one place.", portalLoggedIn: "Logged in", tabDetails: "Reservation details", tabBilling: "Billing history", tabProfile: "Profile",
+        noReservationYet: "No reservation request has been submitted yet. After you submit the form below, the latest request details will appear here.", reservationNumber: "Request no.", requestStatus: "Status", requestCreated: "Created", requestedPlace: "Place", requestedDate: "Date", requestedTime: "Time", requestedPeople: "People", bookingNamePortal: "Reservation name", maxMinuteLimit: "Max limit", usedMinutes: "Reserved minutes", chargedAmount: "Service time charged", resultStatus: "Submitted to Kall", profileSummary: "Profile summary", billingEmpty: "No billing activity yet.", portalCurrentPlan: "Current plan", portalContact: "Contact", portalBalance: "Balance", latestNote: "Latest note",
+        featureRate: "{amount} per active minute", featureDeposit: "Minimum deposit {amount}", featureAutoRefund: "Unused eligible balance auto-refund after {days} days", featureStarterBest: "Best for simple restaurant or shop calls", featureStandardBest: "Priority over unfunded new requests", featurePriorityBest: "Promotional bonus minutes expire without cash value",
+        fxNote: "Prices are converted from KRW to {currency} for the selected language and rounded to the nearest whole unit. Reference rate: {rateText}.",
+        footerSub: "Deposit-based Korean reservation support", footerCopy: "Kall service time is separate from venue deposits, product purchases, tickets, delivery fees, cancellation penalties, and other third-party costs. Kall provides communication support and does not guarantee business availability or reservation acceptance.", footerRefunds: "Refunds",
+        notSignedUp: "Not signed up", signedUp: "Signed up", accountEmptyTitle: "Create an account to begin.", accountEmptyMeta: "Your profile and deposit balance will appear here.", latestActivity: "Latest activity", noDepositActivity: "No deposit activity yet", balance: "Balance", atRate: "At {plan} rate",
+        selectedPackage: "Selected package", choosePackage: "Choose package", perMinute: "per active minute", requestHeader: "Request", expectedHeader: "Expected time", costHeader: "Cost at selected rate", useHeader: "Use",
+        createBeforeDeposit: "Create an account before adding deposit credit.", accountSaved: "Kall account saved. You can now add deposit credit.", demoReset: "Demo account data has been reset.", depositAdded: "{plan} deposit added: {amount} by {method}.",
+        createBeforeRequest: "Create an account before submitting a request.", addCreditBeforeRequest: "Add deposit credit before submitting a request.", needMoreCredit: "This request may need {amount}. Add more credit or lower the max minutes.", requestSubmitted: "Kall request submitted and balance updated.", confirmationText: "{requestNo} submitted. Estimated {minutes} active minutes were reserved from your balance. Remaining balance: {balance}.", min: "min"
+      },
+      ko: {
+        pageTitle: "Kall | 예치금 기반 한국어 예약 지원",
+        pageDescription: "Kall은 예치금 충전 후 분 단위로 차감되는 한국어 전화 예약 지원 서비스입니다.",
+        brandSub: "한국어 예약 어시스턴트",
+        navHow: "이용 방식", navPricing: "요금", navAccount: "계정", navTime: "소요시간", navRequest: "요청", navFaq: "FAQ", navSignup: "가입", navDeposit: "예치금 충전",
+        heroTitle: "Kall 예약은 분 단위 예치금으로.",
+        heroLead: "간단히 계정을 만들고 환불 가능한 예치금을 충전한 뒤, 한국어 전화 예약, 일정 변경, 매장 확인, 긴급 연락을 필요한 시간만큼 이용하세요.",
+        heroPrimary: "계정 만들기", heroSecondary: "예상 시간 보기",
+        proofOneValue: "0", proofOneLabel: "월 멤버십 비용", proofTwoValue: "3-8분", proofTwoLabel: "일반 식당 예약 통화", proofThreeValue: "환불 가능", proofThreeLabel: "미사용 eligible 잔액",
+        mockAccountTitle: "Kall 계정", mockAccountSub: "실시간 잔액 및 요청 추적", mockBalanceLabel: "사용 가능 예치금", mockBalanceCopy: "Kall이 실제로 요청을 처리하는 시간에만 분 단위로 차감됩니다.", mockMinutesLeft: "분 남음",
+        mockTaskTitle: "토요일 저녁 식당 예약", mockTaskStatus: "통화 중", mockScope: "범위", mockScopeValue: "식당", mockEstimate: "예상", mockEstimateValue: "3-8분", mockLimit: "한도", mockLimitValue: "최대 15분",
+        feedAccountTitle: "계정 생성", feedAccountSub: "이름, 이메일, 전화번호만", feedDepositTitle: "예치금 충전", feedDepositSub: "카드, PayPal, 계좌이체", feedTimeTitle: "사용 시간", feedTimeSub: "요청마다 상세 기록", feedTimeValue: "6분", feedDone: "완료",
+        howTitle: "먼저 계정을 만들고, 실제 처리 시간만 결제합니다.", howLead: "새 Kall 흐름은 예치금 기반입니다. 요청 전 가입하고, 잔액을 충전하고, 최대 사용 시간을 정하면 완료 후 상세 사용 시간이 표시됩니다.",
+        stepOneTitle: "계정 생성", stepOneCopy: "이름, 이메일, 전화번호만 받습니다. 이 페이지에서는 비밀번호나 복잡한 가입 신청이 필요하지 않습니다.",
+        stepTwoTitle: "예치금 충전", stepTwoCopy: "패키지를 선택하고 신용카드, PayPal, 계좌이체로 충전합니다. 잔액은 Kall 이용 가능 시간으로 환산됩니다.",
+        stepThreeTitle: "요청 제출", stepThreeCopy: "장소, 날짜, 인원, 요청사항, 최대 사용 시간을 입력합니다. 제3자 비용은 확정 전 먼저 확인합니다.",
+        stepFourTitle: "사용량 추적", stepFourCopy: "완료된 요청마다 사용 분, 남은 잔액, 통화 결과, 환불 가능 잔액을 확인할 수 있습니다.",
+        pricingTitle: "분당 단가가 명확한 예치금 패키지.", pricingLead: "기존 건별 결제 대신 예치금 모델로 전환했습니다. 충전액이 클수록 분당 단가가 낮고 유효 기간이 길어집니다.",
+        accountTitle: "가입 후 Kall 잔액을 충전하세요.", accountLead: "사용자 프로필과 사용 가능한 예치금이 있어야 요청 폼을 제출할 수 있습니다.",
+        signupTitle: "계정 만들기", signupLead: "필수 가입 정보는 이름, 이메일, 전화번호로 제한됩니다.",
+        fullNameLabel: "이름", fullNamePlaceholder: "Jane Miller", emailLabel: "이메일", emailPlaceholder: "jane@example.com", phoneLabel: "전화번호", phonePlaceholder: "+82 10 1234 5678",
+        saveAccount: "계정 저장", resetDemo: "데모 데이터 초기화", depositPackageLabel: "예치금 패키지", paymentMethodLabel: "결제 수단", addSelectedDeposit: "선택한 예치금 충전",
+        bankInfoLabel: "계좌이체 입금 계좌", bankInfoCopy: "입금 후 Kall이 수동으로 확인하여 잔액에 반영합니다.",
+        paymentFineprint: "카드와 PayPal 결제에는 외부 처리 수수료 또는 환전 비용이 포함될 수 있습니다. 계좌이체는 입금 확인 후 수동으로 반영됩니다.",
+        timeTitle: "Kall 요청은 얼마나 걸리나요?", timeLead: "충전 전 예상 소요시간을 확인하세요. 선택한 패키지 단가에 따라 예상 비용 범위가 함께 갱신됩니다.",
+        selectedEstimateTitle: "선택한 예상치", calcRequestType: "요청 유형", calcExpectedMinutes: "예상 시간", calcPackageRate: "패키지 단가", calcEstimatedCost: "예상 비용",
+        estimateFineprint: "예상치는 보장이 아닙니다. Kall은 실제 처리 시간만 차감하며, 설정한 최대 시간에서 중단할 수 있습니다.",
+        exampleGalleryTitle: "대표 요청 예시와 예상 시간", exampleGalleryLead: "자주 발생하는 요청이 예치금 잔액을 얼마나 사용하는지 사진 예시로 확인할 수 있습니다.",
+        requestTitle: "예치금 충전 후 예약 요청을 제출하세요.", requestLead: "기존 Kall 예약 폼의 핵심 흐름을 유지하되, 고정 결제 대신 계정 잔액을 사용합니다.",
+        lockedCopy: "Kall 요청을 제출하려면 계정 생성과 예치금 충전이 필요합니다.",
+        requestTypeLabel: "요청 유형", maxMinutesLabel: "최대 허용 시간", placeNameLabel: "장소 또는 업체명", placeNamePlaceholder: "Mingles Seoul", placeLinkLabel: "지도, 인스타그램, 웹사이트 링크", placeLinkPlaceholder: "https://maps.google.com/...",
+        preferredDateLabel: "희망 날짜", preferredTimeLabel: "희망 시간", peopleLabel: "인원", bookingNameLabel: "예약자 이름", bookingNamePlaceholder: "Jane",
+        requestNoteLabel: "Kall이 무엇을 말하거나 확인해야 하나요?", requestNotePlaceholder: "2명 예약 가능 여부와 취소 규정을 확인하고, 예치금 확정 전 저에게 먼저 알려주세요.",
+        submitRequest: "요청 제출", addMoreCredit: "추가 충전",
+        examplePhotoLabel: "요청 예시", examplePhotoCopy: "\"저녁 7시에 2명 예약해 주시고, 예약금이 있으면 확정 전 먼저 확인해 주세요.\"", exampleStepOne: "Kall이 먼저 요청 내용을 확인합니다.", exampleStepTwo: "실제 처리 시간만 차감됩니다.", exampleStepThree: "결과 요약과 남은 잔액을 받습니다.",
+        requestPreviewTitle: "요청 비용 미리보기", requestPreviewLead: "선택한 패키지와 요청 예상 시간을 기준으로 계산됩니다.",
+        summarySelectedType: "선택 유형", summaryExpectedTime: "예상 처리 시간", summaryCostRange: "비용 범위", summaryCurrentBalance: "현재 잔액",
+        requestFineprint: "업체 예약금, 티켓, 상품, 음식, 배송비, 제3자 취소 수수료는 Kall 서비스 시간과 별도이며 확정 전 승인받습니다.",
+        policyTitle: "투명한 차감 및 환불 규정.", policyLead: "무엇이 차감되고, 무엇이 차감되지 않으며, 미사용 예치금은 어떻게 환불되는지 명확히 안내합니다.",
+        chargedTitle: "차감되는 시간", chargedLead: "실제 처리 시간만 차감됩니다.", notChargedTitle: "차감되지 않는 시간", notChargedLead: "Kall이 처리 중이 아닐 때는 차감되지 않습니다.",
+        refundPolicyCopy: "환불 규정: 미사용 eligible 예치금은 본인 및 결제 확인 후 원 결제수단 또는 계좌이체로 환불할 수 있습니다. 이미 사용한 시간, 고객 승인 후 지급된 제3자 비용, 반환되지 않는 결제/환전 수수료는 환불되지 않습니다. Starter와 Standard 잔액은 유효기간 종료 시 자동 환불 예정으로 처리되며, 추가 충전 시 연장됩니다. 프로모션 보너스 분은 현금 가치가 없고 만료됩니다.",
+        faqTitle: "FAQ", faqLead: "가입 전 요금, 환불, 서비스 제한, 결제 방식을 이해할 수 있도록 FAQ를 페이지에 포함했습니다.",
+        portalTitle: "예약 상세 대시보드", portalLead: "회원가입 후 예약 상세, 잔액 변동, 계정 정보를 한 곳에서 확인할 수 있습니다.", portalLoggedIn: "로그인됨", tabDetails: "예약 상세", tabBilling: "결제 내역", tabProfile: "프로필",
+        noReservationYet: "아직 제출된 예약 요청이 없습니다. 아래 요청 폼을 제출하면 최신 예약 상세가 여기에 표시됩니다.", reservationNumber: "요청 번호", requestStatus: "상태", requestCreated: "생성일", requestedPlace: "장소", requestedDate: "날짜", requestedTime: "시간", requestedPeople: "인원", bookingNamePortal: "예약자명", maxMinuteLimit: "최대 한도", usedMinutes: "예약된 사용 시간", chargedAmount: "서비스 차감액", resultStatus: "Kall에 제출됨", profileSummary: "프로필 요약", billingEmpty: "아직 결제/차감 내역이 없습니다.", portalCurrentPlan: "현재 플랜", portalContact: "연락처", portalBalance: "잔액", latestNote: "최근 요청 메모",
+        featureRate: "실제 처리 1분당 {amount}", featureDeposit: "최소 충전 {amount}", featureAutoRefund: "{days}일 후 미사용 eligible 잔액 자동 환불", featureStarterBest: "간단한 식당/매장 문의에 적합", featureStandardBest: "미충전 신규 요청보다 우선 처리", featurePriorityBest: "프로모션 보너스 분은 현금 가치 없이 만료",
+        fxNote: "가격은 선택 언어에 맞춰 KRW 기준 금액을 {currency}로 환산하고 소수점에서 반올림해 표시합니다. 적용 환율: {rateText}.",
+        footerSub: "예치금 기반 한국어 예약 지원", footerCopy: "Kall 서비스 시간은 업체 예약금, 상품 구매, 티켓, 배송비, 취소 위약금 등 제3자 비용과 별도입니다. Kall은 커뮤니케이션 지원을 제공하며 업체의 예약 가능 여부나 승인 결과를 보장하지 않습니다.", footerRefunds: "환불",
+        notSignedUp: "미가입", signedUp: "가입 완료", accountEmptyTitle: "계정을 만들어 시작하세요.", accountEmptyMeta: "프로필과 예치금 잔액이 여기에 표시됩니다.", latestActivity: "최근 활동", noDepositActivity: "아직 충전 내역이 없습니다.", balance: "잔액", atRate: "{plan} 단가 기준",
+        selectedPackage: "선택됨", choosePackage: "패키지 선택", perMinute: "실제 처리 1분당", requestHeader: "요청", expectedHeader: "예상 시간", costHeader: "선택 단가 기준 비용", useHeader: "사용",
+        createBeforeDeposit: "예치금 충전 전에 계정을 만들어 주세요.", accountSaved: "Kall 계정이 저장되었습니다. 이제 예치금을 충전할 수 있습니다.", demoReset: "데모 데이터가 초기화되었습니다.", depositAdded: "{method}로 {plan} 예치금 {amount}이 충전되었습니다.",
+        createBeforeRequest: "요청 제출 전에 계정을 만들어 주세요.", addCreditBeforeRequest: "요청 제출 전에 예치금을 충전해 주세요.", needMoreCredit: "이 요청은 {amount}이 필요할 수 있습니다. 잔액을 충전하거나 최대 시간을 낮춰 주세요.", requestSubmitted: "Kall 요청이 제출되고 잔액이 갱신되었습니다.", confirmationText: "{requestNo} 제출 완료. 예상 {minutes}분이 잔액에서 예약되었습니다. 남은 잔액: {balance}.", min: "분"
+      },
+      ja: {},
+      zh: {}
+    };
+    i18n.ja = { ...i18n.en,
+      pageTitle: "Kall | デポジット制の韓国語予約サポート", brandSub: "韓国語予約アシスタント", navHow: "使い方", navPricing: "料金", navAccount: "アカウント", navTime: "所要時間", navRequest: "依頼", navFaq: "FAQ", navSignup: "登録", navDeposit: "チャージ",
+      heroTitle: "Kallの予約は分単位のデポジットで。", heroLead: "アカウントを作成し、返金可能なデポジットをチャージして、韓国語の電話予約、日程変更、店舗確認、急ぎの連絡を必要な分だけ利用できます。", heroPrimary: "アカウント作成", heroSecondary: "所要時間を見る",
+      proofOneLabel: "月額会費", proofTwoValue: "3-8分", proofTwoLabel: "一般的なレストラン予約", proofThreeValue: "返金可能", proofThreeLabel: "未使用の対象残高",
+      feedAccountTitle: "アカウント作成", feedAccountSub: "名前、メール、電話番号のみ", feedDepositTitle: "デポジット入金", feedDepositSub: "カード、PayPal、銀行振込", feedTimeTitle: "使用時間", feedTimeSub: "依頼ごとに明細表示", feedTimeValue: "6分", feedDone: "完了",
+      howTitle: "まずアカウントを作成し、実際の作業時間だけ支払います。", pricingTitle: "分単位料金が明確なデポジットプラン。", accountTitle: "登録後、Kall残高をチャージ。", timeTitle: "Kallの依頼にはどれくらい時間がかかりますか？", requestTitle: "残高をチャージしてから予約依頼を送信。", policyTitle: "明確な課金と返金ルール。", faqTitle: "FAQ",
+      fullNameLabel: "氏名", emailLabel: "メール", phoneLabel: "電話番号", saveAccount: "アカウント保存", resetDemo: "デモデータをリセット", depositPackageLabel: "デポジットプラン", paymentMethodLabel: "支払い方法", addSelectedDeposit: "選択プランをチャージ",
+      submitRequest: "依頼を送信", addMoreCredit: "追加チャージ", footerRefunds: "返金", notSignedUp: "未登録", signedUp: "登録済み", balance: "残高", min: "分",
+      mockMinutesLeft: "分残り", bankInfoLabel: "銀行振込口座", bankInfoCopy: "振込後、Kallが手動で入金を確認し残高に反映します。",
+      exampleGalleryTitle: "依頼例と想定時間", exampleGalleryLead: "よくある依頼がデポジット残高をどの程度使うか、写真例で確認できます。",
+      portalTitle: "予約詳細ダッシュボード", portalLead: "登録後、予約詳細、残高の動き、アカウント情報を一か所で確認できます。", portalLoggedIn: "ログイン中", tabDetails: "予約詳細", tabBilling: "決済履歴", tabProfile: "プロフィール",
+      noReservationYet: "まだ予約依頼は送信されていません。下の依頼フォームを送信すると、最新の詳細がここに表示されます。", reservationNumber: "依頼番号", requestStatus: "ステータス", requestCreated: "作成日", requestedPlace: "場所", requestedDate: "日付", requestedTime: "時間", requestedPeople: "人数", bookingNamePortal: "予約名", maxMinuteLimit: "上限", usedMinutes: "確保分数", chargedAmount: "作業時間の差引", resultStatus: "Kallに送信済み", profileSummary: "プロフィール概要", billingEmpty: "決済・差引履歴はまだありません。", portalCurrentPlan: "現在のプラン", portalContact: "連絡先", portalBalance: "残高", latestNote: "最新メモ",
+      featureRate: "実作業1分あたり {amount}", featureDeposit: "最低チャージ {amount}", featureAutoRefund: "{days}日後に未使用対象残高を自動返金", featureStarterBest: "簡単なレストラン・店舗確認向け", featureStandardBest: "未入金の新規依頼より優先", featurePriorityBest: "ボーナス分は現金価値なしで失効",
+      fxNote: "価格はKRW基準金額を選択言語の{currency}に換算し、小数点で四捨五入して表示します。適用レート: {rateText}.",
+      requestNotePlaceholder: "2名の予約可否とキャンセル規定を確認し、デポジット確定前に連絡してください。", examplePhotoLabel: "依頼例", examplePhotoCopy: "\"19時に2名で予約し、デポジットがあれば確定前に確認してください。\""
+    };
+    i18n.zh = { ...i18n.en,
+      pageTitle: "Kall | 预存款制韩语预约协助", brandSub: "韩语预约助手", navHow: "使用方式", navPricing: "价格", navAccount: "账户", navTime: "时间预估", navRequest: "请求", navFaq: "FAQ", navSignup: "注册", navDeposit: "充值",
+      heroTitle: "Kall 预约，按分钟使用预存款。", heroLead: "创建轻量账户，充值可退款预存款，然后按实际分钟使用韩语电话预约、改期、店铺确认和紧急联系服务。", heroPrimary: "创建账户", heroSecondary: "查看时间预估",
+      proofOneLabel: "月会员费", proofTwoValue: "3-8分钟", proofTwoLabel: "常见餐厅预约通话", proofThreeValue: "可退款", proofThreeLabel: "未使用的合格余额",
+      feedAccountTitle: "账户已创建", feedAccountSub: "仅需姓名、邮箱、电话", feedDepositTitle: "预存款已充值", feedDepositSub: "信用卡、PayPal 或银行转账", feedTimeTitle: "已用时间", feedTimeSub: "每个请求都有明细", feedTimeValue: "6分钟", feedDone: "完成",
+      howTitle: "先创建账户，只为实际处理时间付费。", pricingTitle: "分钟费率清晰的预存款套餐。", accountTitle: "注册后充值 Kall 余额。", timeTitle: "Kall 请求通常需要多长时间？", requestTitle: "充值后提交预约请求。", policyTitle: "透明的扣费和退款规则。", faqTitle: "FAQ",
+      fullNameLabel: "姓名", emailLabel: "邮箱", phoneLabel: "电话号码", saveAccount: "保存账户", resetDemo: "重置演示数据", depositPackageLabel: "预存款套餐", paymentMethodLabel: "付款方式", addSelectedDeposit: "充值所选套餐",
+      submitRequest: "提交请求", addMoreCredit: "追加充值", footerRefunds: "退款", notSignedUp: "未注册", signedUp: "已注册", balance: "余额", min: "分钟",
+      mockMinutesLeft: "分钟剩余", bankInfoLabel: "银行转账账户", bankInfoCopy: "转账后，Kall 会人工确认入账并更新余额。",
+      exampleGalleryTitle: "请求示例与预计时间", exampleGalleryLead: "通过图片示例了解常见请求会消耗多少预存款余额。",
+      portalTitle: "预约详情仪表板", portalLead: "注册后可在一个位置查看预约详情、余额变动和账户信息。", portalLoggedIn: "已登录", tabDetails: "预约详情", tabBilling: "账单记录", tabProfile: "个人资料",
+      noReservationYet: "还没有提交预约请求。提交下方表单后，最新详情会显示在这里。", reservationNumber: "请求编号", requestStatus: "状态", requestCreated: "创建时间", requestedPlace: "地点", requestedDate: "日期", requestedTime: "时间", requestedPeople: "人数", bookingNamePortal: "预约姓名", maxMinuteLimit: "最高分钟", usedMinutes: "预留分钟", chargedAmount: "服务时间扣费", resultStatus: "已提交给 Kall", profileSummary: "资料摘要", billingEmpty: "暂无账单或扣费记录。", portalCurrentPlan: "当前套餐", portalContact: "联系方式", portalBalance: "余额", latestNote: "最新备注",
+      featureRate: "实际处理每分钟 {amount}", featureDeposit: "最低充值 {amount}", featureAutoRefund: "{days}天后自动退还未使用合格余额", featureStarterBest: "适合简单餐厅或店铺确认", featureStandardBest: "优先于未充值的新请求", featurePriorityBest: "奖励分钟无现金价值并会过期",
+      fxNote: "价格由KRW基准金额换算为所选语言的{currency}，并四舍五入显示。适用汇率: {rateText}.",
+      requestNotePlaceholder: "请确认两人预约和取消政策，如需押金请先联系我。", examplePhotoLabel: "请求示例", examplePhotoCopy: "\"请预订晚上7点两人座，如需押金请先确认。\""
+    };
+    const packageText = {
+      en: {
+        starter: { name: "Starter", description: "For one or two short reservation requests during a trip.", features: ["KRW 2,000 per active minute", "Minimum deposit KRW 80,000", "Unused eligible balance auto-refund after 30 days", "Best for simple restaurant or shop calls"] },
+        standard: { name: "Standard", badge: "Recommended", description: "For most travelers who need reservations, changes, and follow-up calls.", features: ["KRW 1,500 per active minute", "Minimum deposit KRW 180,000", "Unused eligible balance auto-refund after 90 days", "Priority over unfunded new requests"] },
+        priority: { name: "Priority", description: "For repeat users, clinics, beauty bookings, and time-sensitive travel changes.", features: ["KRW 1,200 per active minute", "Minimum deposit KRW 360,000", "Unused principal refundable on request", "Promotional bonus minutes expire without cash value"] }
+      },
+      ko: {
+        starter: { name: "Starter", description: "여행 중 짧은 예약 요청 1-2건에 적합합니다.", features: ["실제 처리 1분당 KRW 2,000", "최소 충전 KRW 80,000", "30일 후 미사용 eligible 잔액 자동 환불", "간단한 식당/매장 문의에 적합"] },
+        standard: { name: "Standard", badge: "추천", description: "예약, 변경, 후속 통화가 필요한 대부분의 여행자에게 적합합니다.", features: ["실제 처리 1분당 KRW 1,500", "최소 충전 KRW 180,000", "90일 후 미사용 eligible 잔액 자동 환불", "미충전 신규 요청보다 우선 처리"] },
+        priority: { name: "Priority", description: "반복 이용, 클리닉/뷰티 예약, 시간 민감 요청에 적합합니다.", features: ["실제 처리 1분당 KRW 1,200", "최소 충전 KRW 360,000", "미사용 원금은 요청 시 환불 가능", "프로모션 보너스 분은 현금 가치 없이 만료"] }
+      },
+      ja: {
+        starter: { name: "Starter", description: "旅行中の短い予約依頼1-2件に向いています。", features: ["作業1分あたり KRW 2,000", "最低チャージ KRW 80,000", "30日後に未使用対象残高を自動返金", "簡単な店舗確認に最適"] },
+        standard: { name: "Standard", badge: "おすすめ", description: "予約、変更、フォローアップが必要な旅行者向け。", features: ["作業1分あたり KRW 1,500", "最低チャージ KRW 180,000", "90日後に未使用対象残高を自動返金", "未入金の新規依頼より優先"] },
+        priority: { name: "Priority", description: "リピート利用、クリニック、美容予約、急ぎの調整向け。", features: ["作業1分あたり KRW 1,200", "最低チャージ KRW 360,000", "未使用元本は依頼により返金可能", "ボーナス分は現金価値なしで失効"] }
+      },
+      zh: {
+        starter: { name: "Starter", description: "适合旅途中一到两个简短预约请求。", features: ["实际处理每分钟 KRW 2,000", "最低充值 KRW 80,000", "30天后自动退还未使用合格余额", "适合简单餐厅或商店电话"] },
+        standard: { name: "Standard", badge: "推荐", description: "适合需要预约、变更和后续确认的大多数旅行者。", features: ["实际处理每分钟 KRW 1,500", "最低充值 KRW 180,000", "90天后自动退还未使用合格余额", "优先于未充值的新请求"] },
+        priority: { name: "Priority", description: "适合多次使用、诊所美容预约和时间敏感请求。", features: ["实际处理每分钟 KRW 1,200", "最低充值 KRW 360,000", "未使用本金可申请退款", "奖励分钟无现金价值并会过期"] }
+      }
+    };
+    const paymentText = {
+      en: { card: ["Credit card", "Secure card checkout"], paypal: ["PayPal", "PayPal balance or card"], bank: ["Bank transfer", "Manual confirmation"] },
+      ko: { card: ["신용카드", "보안 카드 결제"], paypal: ["PayPal", "PayPal 잔액 또는 카드"], bank: ["계좌이체", "수동 입금 확인"] },
+      ja: { card: ["クレジットカード", "安全なカード決済"], paypal: ["PayPal", "残高またはカード"], bank: ["銀行振込", "手動確認"] },
+      zh: { card: ["信用卡", "安全卡支付"], paypal: ["PayPal", "余额或银行卡"], bank: ["银行转账", "人工确认"] }
+    };
+    const estimateText = {
+      en: [
+        ["dinner", "Dinner reservation", "Restaurant booking", "Simple availability and booking call."],
+        ["popular", "Popular restaurant with alternatives", "Reservation plus options", "Includes alternate time or branch checks."],
+        ["clinic", "Clinic or beauty appointment", "Appointment coordination", "Treatment name, doctor, date, and policy check."],
+        ["reschedule", "Change or cancel existing booking", "Schedule update", "Best when you provide the existing booking name."],
+        ["pickup", "Airport pickup or driver contact", "Urgent coordination", "Call or message driver, hotel, or transfer company."],
+        ["stock", "Lost item or product stock check", "Information request", "Venue or shop confirmation by phone."],
+        ["ticket", "Ticket or event availability", "Research and phone check", "Availability, seating, pickup, and payment rules."],
+        ["delivery", "Delivery or order confirmation", "Order support", "Menu, address, delivery timing, and payment checks."],
+        ["translation", "Translate and relay a short request", "Message or call script", "Short Korean explanation or confirmation."],
+        ["travel", "Travel schedule issue", "Complex coordination", "Hotels, transport, timing, and multiple vendors."]
+      ],
+      ko: [
+        ["dinner", "저녁 식당 예약", "식당 예약", "간단한 가능 여부 확인 및 예약 통화."],
+        ["popular", "인기 식당 대안 확인", "예약 및 대안 조율", "대체 시간 또는 지점 확인 포함."],
+        ["clinic", "클리닉 또는 뷰티 예약", "예약 일정 조율", "시술명, 담당자, 날짜, 정책 확인."],
+        ["reschedule", "기존 예약 변경/취소", "일정 변경", "기존 예약자명이 있으면 가장 빠릅니다."],
+        ["pickup", "공항 픽업/기사 연락", "긴급 조율", "기사, 호텔, 이동 업체에 전화 또는 메시지."],
+        ["stock", "분실물/재고 확인", "정보 확인", "업체 또는 매장 전화 확인."],
+        ["ticket", "티켓/이벤트 가능 여부", "리서치 및 전화 확인", "가능 여부, 좌석, 수령, 결제 규정."],
+        ["delivery", "배달/주문 확인", "주문 지원", "메뉴, 주소, 배달 시간, 결제 확인."],
+        ["translation", "짧은 요청 번역 전달", "메시지 또는 통화 스크립트", "짧은 한국어 설명 또는 확인."],
+        ["travel", "여행 일정 문제", "복합 조율", "호텔, 교통, 시간, 여러 업체 조율."]
+      ],
+      ja: [
+        ["dinner", "ディナー予約", "レストラン予約", "空席確認と予約の簡単な電話。"],
+        ["popular", "人気店と代替案確認", "予約と候補調整", "別時間や支店確認を含みます。"],
+        ["clinic", "クリニック/美容予約", "予約調整", "施術名、担当者、日付、規定を確認。"],
+        ["reschedule", "既存予約の変更/取消", "日程変更", "予約名があると早く進みます。"],
+        ["pickup", "空港送迎/運転手連絡", "急ぎの調整", "運転手、ホテル、送迎会社に連絡。"],
+        ["stock", "忘れ物/在庫確認", "情報確認", "店舗へ電話で確認。"],
+        ["ticket", "チケット/イベント空き", "調査と電話確認", "空き、座席、受取、支払い規定。"],
+        ["delivery", "配達/注文確認", "注文サポート", "メニュー、住所、配達時間、支払い確認。"],
+        ["translation", "短い依頼の翻訳伝達", "メッセージ/通話台本", "短い韓国語説明や確認。"],
+        ["travel", "旅行日程の問題", "複合調整", "ホテル、交通、時間、複数業者の調整。"]
+      ],
+      zh: [
+        ["dinner", "晚餐餐厅预约", "餐厅预约", "简单确认空位并预约。"],
+        ["popular", "热门餐厅及替代方案", "预约和备选协调", "包括其他时间或分店确认。"],
+        ["clinic", "诊所或美容预约", "预约协调", "确认项目、医生、日期和政策。"],
+        ["reschedule", "更改或取消已有预约", "日程变更", "提供已有预约姓名会更快。"],
+        ["pickup", "机场接送或司机联系", "紧急协调", "联系司机、酒店或接送公司。"],
+        ["stock", "遗失物或库存确认", "信息查询", "电话确认场所或商店。"],
+        ["ticket", "票务或活动余量", "调查和电话确认", "确认余量、座位、领取和付款规则。"],
+        ["delivery", "外卖或订单确认", "订单支持", "确认菜单、地址、配送时间和付款。"],
+        ["translation", "翻译并转达简短请求", "信息或电话脚本", "简短韩语说明或确认。"],
+        ["travel", "旅行日程问题", "复杂协调", "酒店、交通、时间和多个供应商。"]
+      ]
+    };
+    const policyText = {
+      en: {
+        charged: ["Reading your request, asking clarifying questions, and preparing the call script.", "Researching venue details, policies, availability, menus, treatment names, routes, or booking channels.", "Phone calls, hold time during calls, and messaging with Korean businesses or service providers.", "Writing the result summary, translating key answers, and giving next-step options.", "Troubleshooting caused by inaccurate venue information, changed availability, or third-party response delays while Kall is actively working."],
+        notCharged: ["Waiting for your reply after Kall asks for confirmation or additional information.", "Waiting for a business to reply asynchronously, unless Kall is actively on the phone or composing follow-up messages.", "Explaining how the Kall service works before your first funded request.", "Fixing an error that was clearly caused by Kall's own mistake.", "Closed hours, breaks, and technical issues unrelated to your request."]
+      },
+      ko: {
+        charged: ["요청 내용을 읽고, 추가 질문을 정리하고, 통화 스크립트를 준비하는 시간.", "업체 정보, 정책, 가능 여부, 메뉴, 시술명, 경로, 예약 채널을 조사하는 시간.", "한국 업체와 전화하거나 대기하거나 메시지를 작성하는 시간.", "결과 요약 작성, 핵심 답변 번역, 다음 선택지 안내 시간.", "부정확한 업체 정보, 변경된 가능 여부, 제3자 응답 지연 때문에 Kall이 실제 처리 중인 시간."],
+        notCharged: ["Kall이 확인이나 추가 정보를 요청한 뒤 고객 답변을 기다리는 시간.", "Kall이 통화 중이거나 후속 메시지를 작성 중이 아닌 비동기 업체 답변 대기 시간.", "첫 충전 요청 전 서비스 방식을 설명하는 시간.", "명백한 Kall 실수로 발생한 오류를 수정하는 시간.", "영업 외 시간, 휴식 시간, 요청과 무관한 기술 문제 시간."]
+      },
+      ja: {
+        charged: ["依頼確認、追加質問、通話台本準備の時間。", "店舗情報、規定、空き、メニュー、施術名、経路、予約チャネルの調査時間。", "韓国の店舗や事業者への通話、保留、メッセージ作成時間。", "結果要約、重要回答の翻訳、次の選択肢案内の時間。", "不正確な情報や第三者の遅延によりKallが実作業している時間。"],
+        notCharged: ["Kallが確認後にお客様の返信を待つ時間。", "Kallが通話や返信作成をしていない非同期の待機時間。", "初回入金前にサービス説明をする時間。", "Kallの明らかなミスを修正する時間。", "営業時間外、休憩、依頼と無関係な技術問題。"]
+      },
+      zh: {
+        charged: ["阅读请求、确认问题并准备电话脚本的时间。", "调查店铺信息、政策、余量、菜单、项目名称、路线或预约渠道的时间。", "与韩国商家电话、等待接听或发送消息的时间。", "撰写结果摘要、翻译关键回答并提供下一步选项的时间。", "因信息不准确、余量变化或第三方延迟而 Kall 正在实际处理的时间。"],
+        notCharged: ["Kall 询问确认或补充信息后等待你回复的时间。", "Kall 未通话或未编写后续消息时等待商家异步回复的时间。", "首次充值前解释服务方式的时间。", "修正明确由 Kall 造成的错误的时间。", "非营业时间、休息时间和与请求无关的技术问题。"]
+      }
+    };
+    const faqText = {
+      en: [
+        ["Why does Kall now require sign-up?", "A deposit account needs a profile so Kall can show balance, receipts, remaining minutes, refund eligibility, and request history. The sign-up form only asks for name, email, and phone number."],
+        ["Do I pay a monthly membership fee?", "No. The page is structured around prepaid deposit credit. Kall deducts minutes only when the team is actively working on your request."],
+        ["Can Kall guarantee a reservation?", "No. Kall can call and communicate in Korean, but the final outcome depends on the business, availability, cancellation policy, deposits, and third-party rules."],
+        ["What payment methods are supported?", "The deposit section supports credit card, PayPal, and bank transfer options. Card and PayPal payments may include processor or currency conversion costs. Bank transfers are confirmed manually."],
+        ["Can Kall pay venue deposits or third-party costs for me?", "Kall should ask for your approval before confirming any venue deposit, ticket, product, delivery, cancellation fee, or other third-party cost."],
+        ["How do I control the cost of a request?", "Each request includes a maximum minute limit. If the work reaches that limit, Kall pauses and asks whether you want to continue, change the request, or stop."],
+        ["How do refunds work?", "Ask for a refund of unused eligible credit from your account. Kall verifies the payment, deducts used service time and approved third-party costs, then returns the eligible balance."],
+        ["What requests are not allowed?", "Kall does not handle emergency medical, police, legal representation, illegal activity, harassment, impersonation, high-risk financial decisions, or requests requiring licensed professional advice."]
+      ],
+      ko: [
+        ["왜 가입이 필요한가요?", "예치금 계정은 잔액, 영수증, 남은 시간, 환불 가능 여부, 요청 내역을 보여주기 위해 프로필이 필요합니다. 가입 정보는 이름, 이메일, 전화번호뿐입니다."],
+        ["월 멤버십 비용이 있나요?", "없습니다. 이 페이지는 선불 예치금 구조이며, Kall이 실제로 요청을 처리할 때만 시간이 차감됩니다."],
+        ["예약 성공을 보장하나요?", "아니요. Kall은 한국어로 전화하고 소통하지만 최종 결과는 업체, 가능 여부, 취소 정책, 예약금, 제3자 규정에 따라 달라집니다."],
+        ["어떤 결제 수단을 지원하나요?", "신용카드, PayPal, 계좌이체를 지원합니다. 카드와 PayPal은 처리/환전 비용이 있을 수 있고, 계좌이체는 수동 확인됩니다."],
+        ["업체 예약금이나 제3자 비용을 대신 낼 수 있나요?", "업체 예약금, 티켓, 상품, 배송비, 취소 수수료 등은 확정 전 고객 승인이 필요합니다."],
+        ["요청 비용은 어떻게 통제하나요?", "각 요청에는 최대 사용 시간을 설정합니다. 한도에 도달하면 Kall이 중단하고 계속 진행할지 확인합니다."],
+        ["환불은 어떻게 되나요?", "계정에서 미사용 eligible 크레딧 환불을 요청할 수 있습니다. 결제 확인 후 사용 시간과 승인된 제3자 비용을 제외하고 환불합니다."],
+        ["처리하지 않는 요청은 무엇인가요?", "응급 의료, 경찰, 법률 대리, 불법 행위, 괴롭힘, 사칭, 고위험 금융 의사결정, 전문 자격이 필요한 조언은 처리하지 않습니다."]
+      ],
+      ja: [
+        ["なぜ登録が必要ですか？", "残高、領収書、残り時間、返金可否、依頼履歴を表示するためにプロフィールが必要です。入力は名前、メール、電話番号のみです。"],
+        ["月額料金はありますか？", "ありません。事前チャージ制で、Kallが実際に作業している時間だけ差し引かれます。"],
+        ["予約を保証しますか？", "いいえ。Kallは韓国語で連絡しますが、結果は店舗、空き、キャンセル規定、デポジット、第三者ルールによります。"],
+        ["支払い方法は？", "クレジットカード、PayPal、銀行振込に対応します。カードとPayPalには処理や為替費用が発生する場合があります。"],
+        ["店舗デポジットを代行できますか？", "店舗デポジット、チケット、商品、配達、キャンセル料などは確定前にお客様の承認が必要です。"],
+        ["費用をどう管理しますか？", "各依頼で最大分数を設定できます。上限に達したらKallは停止し、継続するか確認します。"],
+        ["返金はどうなりますか？", "未使用の対象クレジットは返金申請できます。使用時間と承認済み第三者費用を差し引いて返金します。"],
+        ["対応できない依頼は？", "緊急医療、警察、法的代理、違法行為、嫌がらせ、なりすまし、高リスク金融判断、専門資格が必要な助言は対応しません。"]
+      ],
+      zh: [
+        ["为什么需要注册？", "预存款账户需要资料来显示余额、收据、剩余分钟、退款资格和请求记录。注册只需姓名、邮箱和电话。"],
+        ["需要月费吗？", "不需要。本页采用预付余额模式，只有 Kall 实际处理请求时才扣分钟。"],
+        ["Kall 能保证预约成功吗？", "不能。Kall 可以用韩语沟通，但结果取决于商家、余量、取消政策、押金和第三方规则。"],
+        ["支持哪些付款方式？", "支持信用卡、PayPal 和银行转账。卡和 PayPal 可能产生处理或汇率费用，银行转账人工确认。"],
+        ["能代付商家押金或第三方费用吗？", "商家押金、票券、商品、配送费或取消费等第三方费用，需要你先批准。"],
+        ["如何控制请求费用？", "每个请求可设置最大分钟数。达到上限后 Kall 会暂停并询问是否继续。"],
+        ["如何退款？", "可以申请退还未使用的合格余额。Kall 核对付款后扣除已用时间和已批准第三方费用，再退还余额。"],
+        ["哪些请求不支持？", "不处理紧急医疗、报警、法律代理、违法行为、骚扰、冒充、高风险金融决策或需要专业许可建议的请求。"]
+      ]
+    };
+    const packages = {
+      starter: {
+        id: "starter",
+        name: "Starter",
+        deposit: 80000,
+        rate: 2000,
+        minutes: 40,
+        validity: "30 days",
+        description: "For one or two short reservation requests during a trip.",
+        features: [
+          "KRW 2,000 per active minute",
+          "Minimum deposit KRW 80,000",
+          "Unused eligible balance auto-refund after 30 days",
+          "Best for simple restaurant or shop calls"
+        ]
+      },
+      standard: {
+        id: "standard",
+        name: "Standard",
+        deposit: 180000,
+        rate: 1500,
+        minutes: 120,
+        validity: "90 days",
+        badge: "Recommended",
+        description: "For most travelers who need reservations, changes, and follow-up calls.",
+        features: [
+          "KRW 1,500 per active minute",
+          "Minimum deposit KRW 180,000",
+          "Unused eligible balance auto-refund after 90 days",
+          "Priority over unfunded new requests"
+        ]
+      },
+      priority: {
+        id: "priority",
+        name: "Priority",
+        deposit: 360000,
+        rate: 1200,
+        minutes: 300,
+        validity: "90 days",
+        description: "For repeat users, clinics, beauty bookings, and time-sensitive travel changes.",
+        features: [
+          "KRW 1,200 per active minute",
+          "Minimum deposit KRW 360,000",
+          "Unused principal refundable on request",
+          "Promotional bonus minutes expire without cash value"
+        ]
+      }
+    };
+
+    const paymentMethods = [
+      { id: "card", name: "Credit card", note: "Secure card checkout", icon: "card" },
+      { id: "paypal", name: "PayPal", note: "PayPal balance or card", icon: "paypal" },
+      { id: "bank", name: "Bank transfer", note: "Manual confirmation", icon: "bank" }
+    ];
+
+    const estimates = [
+      { id: "dinner", name: "Dinner reservation", scope: "Restaurant booking", min: 3, max: 8, note: "Simple availability and booking call." },
+      { id: "popular", name: "Popular restaurant with alternatives", scope: "Reservation plus options", min: 10, max: 18, note: "Includes alternate time or branch checks." },
+      { id: "clinic", name: "Clinic or beauty appointment", scope: "Appointment coordination", min: 8, max: 15, note: "Treatment name, doctor, date, and policy check." },
+      { id: "reschedule", name: "Change or cancel existing booking", scope: "Schedule update", min: 5, max: 12, note: "Best when you provide the existing booking name." },
+      { id: "pickup", name: "Airport pickup or driver contact", scope: "Urgent coordination", min: 5, max: 10, note: "Call or message driver, hotel, or transfer company." },
+      { id: "stock", name: "Lost item or product stock check", scope: "Information request", min: 8, max: 15, note: "Venue or shop confirmation by phone." },
+      { id: "ticket", name: "Ticket or event availability", scope: "Research and phone check", min: 12, max: 25, note: "Availability, seating, pickup, and payment rules." },
+      { id: "delivery", name: "Delivery or order confirmation", scope: "Order support", min: 10, max: 20, note: "Menu, address, delivery timing, and payment checks." },
+      { id: "translation", name: "Translate and relay a short request", scope: "Message or call script", min: 5, max: 12, note: "Short Korean explanation or confirmation." },
+      { id: "travel", name: "Travel schedule issue", scope: "Complex coordination", min: 20, max: 45, note: "Hotels, transport, timing, and multiple vendors." }
+    ];
+
+    const currencyByLang = {
+      ko: { code: "KRW", symbol: "KRW ", rate: 1, locale: "ko-KR", rateText: "1 KRW = 1 KRW" },
+      en: { code: "USD", symbol: "$", rate: 0.000665, locale: "en-US", rateText: "1 KRW = 0.000665 USD" },
+      ja: { code: "JPY", symbol: "¥", rate: 0.1059, locale: "ja-JP", rateText: "1 KRW = 0.1059 JPY" },
+      zh: { code: "CNY", symbol: "¥", rate: 0.004546, locale: "zh-CN", rateText: "1 KRW = 0.004546 CNY" }
+    };
+
+    const serviceExamples = [
+      { id: "flowers", min: 10, max: 20, image: "https://images.unsplash.com/photo-1487070183336-b863922373d4?auto=format&fit=crop&w=700&q=80", title: { en: "Order flowers", ko: "꽃 주문", ja: "花を注文", zh: "订花" } },
+      { id: "pizza", min: 5, max: 10, image: "https://images.unsplash.com/photo-1565299624946-b28f40a0ae38?auto=format&fit=crop&w=700&q=80", title: { en: "Ordering pizza", ko: "피자 주문", ja: "ピザ注文", zh: "订披萨" } },
+      { id: "baseball", min: 15, max: 30, image: "https://images.pexels.com/photos/33715952/pexels-photo-33715952.jpeg?auto=compress&cs=tinysrgb&w=700", title: { en: "Buy baseball tickets", ko: "야구 티켓 구매", ja: "野球チケット購入", zh: "买棒球票" } },
+      { id: "handyman", min: 15, max: 35, image: "https://images.unsplash.com/photo-1586864387967-d02ef85d93e8?auto=format&fit=crop&w=700&q=80", title: { en: "Hire a handyman", ko: "수리 기사 섭외", ja: "修理業者手配", zh: "预约维修工" } },
+      { id: "housekeeper", min: 20, max: 35, image: "https://images.pexels.com/photos/9462305/pexels-photo-9462305.jpeg?auto=compress&cs=tinysrgb&w=700", title: { en: "Hire housekeeper", ko: "청소 서비스 예약", ja: "清掃サービス手配", zh: "预约清洁服务" } },
+      { id: "concert", min: 15, max: 45, image: "https://images.pexels.com/photos/12657544/pexels-photo-12657544.jpeg?auto=compress&cs=tinysrgb&w=700", title: { en: "Buy concert tickets", ko: "공연 티켓 구매", ja: "コンサート券購入", zh: "买演唱会票" } },
+      { id: "movie", min: 10, max: 20, image: "https://images.unsplash.com/photo-1489599849927-2ee91cede3ba?auto=format&fit=crop&w=700&q=80", title: { en: "Buy movie tickets", ko: "영화 티켓 구매", ja: "映画チケット購入", zh: "买电影票" } },
+      { id: "hotel", min: 10, max: 30, image: "https://images.unsplash.com/photo-1566073771259-6a8506099945?auto=format&fit=crop&w=700&q=80", title: { en: "Book a hotel", ko: "호텔 예약", ja: "ホテル予約", zh: "订酒店" } },
+      { id: "restaurant", min: 3, max: 8, image: "https://images.pexels.com/photos/5086613/pexels-photo-5086613.jpeg?auto=compress&cs=tinysrgb&w=700", title: { en: "Dinner reservation", ko: "저녁 식당 예약", ja: "夕食予約", zh: "晚餐预约" } },
+      { id: "groceries", min: 10, max: 30, image: "https://images.unsplash.com/photo-1542838132-92c53300491e?auto=format&fit=crop&w=700&q=80", title: { en: "Order groceries", ko: "식료품 주문", ja: "食材を注文", zh: "订购食材" } }
+    ];
+
+    const storageKey = "kallIndexV14State";
+    const state = loadState();
+    const $ = (selector) => document.querySelector(selector);
+    const $$ = (selector) => [...document.querySelectorAll(selector)];
+
+    function loadState() {
+      const fallback = {
+        lang: "en",
+        selectedPackage: "standard",
+        selectedPayment: "card",
+        selectedEstimate: "dinner",
+        activeAccountTab: "details",
+        account: null,
+        balance: 0,
+        lastRequest: null,
+        ledger: []
+      };
+      try {
+        const stored = JSON.parse(localStorage.getItem(storageKey) || "null");
+        return stored && typeof stored === "object" ? { ...fallback, ...stored } : fallback;
+      } catch (error) {
+        return fallback;
+      }
+    }
+
+    function saveState() {
+      localStorage.setItem(storageKey, JSON.stringify(state));
+    }
+
+    function lang() {
+      return i18n[state.lang] ? state.lang : "en";
+    }
+
+    function t(key, values = {}) {
+      const value = (i18n[lang()] && i18n[lang()][key]) || i18n.en[key] || key;
+      return Object.entries(values).reduce((text, [name, replacement]) => text.replaceAll(`{${name}}`, replacement), value);
+    }
+
+    function setText(selector, value) {
+      const el = $(selector);
+      if (el) el.textContent = value;
+    }
+
+    function translateStatic() {
+      document.documentElement.lang = lang() === "ko" ? "ko" : lang() === "ja" ? "ja" : lang() === "zh" ? "zh-CN" : "en";
+      document.title = t("pageTitle");
+      const meta = document.querySelector('meta[name="description"]');
+      if (meta) meta.setAttribute("content", t("pageDescription"));
+      $$("[data-i18n]").forEach((el) => { el.textContent = t(el.dataset.i18n); });
+      $$("[data-i18n-placeholder]").forEach((el) => { el.setAttribute("placeholder", t(el.dataset.i18nPlaceholder)); });
+      $$(".lang-option").forEach((btn) => btn.classList.toggle("selected", btn.dataset.setLang === lang()));
+    }
+
+    function localPackageText(pkg) {
+      return (packageText[lang()] && packageText[lang()][pkg.id]) || packageText.en[pkg.id];
+    }
+
+    function localEstimate(item) {
+      const found = (estimateText[lang()] || estimateText.en).find((entry) => entry[0] === item.id) || estimateText.en.find((entry) => entry[0] === item.id);
+      return { name: found[1], scope: found[2], note: found[3] };
+    }
+
+    function methodText(method) {
+      const found = (paymentText[lang()] && paymentText[lang()][method.id]) || paymentText.en[method.id];
+      return { name: found[0], note: found[1] };
+    }
+
+    function currency() {
+      return currencyByLang[lang()] || currencyByLang.en;
+    }
+
+    function money(value) {
+      const unit = currency();
+      const converted = Math.round(Math.max(0, Number(value) || 0) * unit.rate);
+      return `${unit.symbol}${converted.toLocaleString(unit.locale)}`;
+    }
+
+    function moneySigned(value) {
+      const amount = Number(value) || 0;
+      if (amount === 0) return money(0);
+      return `${amount < 0 ? "-" : "+"}${money(Math.abs(amount))}`;
+    }
+
+    function moneyRange(min, max) {
+      return `${money(min)}-${money(max)}`;
+    }
+
+    function minuteRange(item) {
+      return `${item.min}-${item.max} ${t("min")}`;
+    }
+
+    function escapeHtml(value = "") {
+      return String(value).replace(/[&<>"']/g, (char) => ({
+        "&": "&amp;",
+        "<": "&lt;",
+        ">": "&gt;",
+        '"': "&quot;",
+        "'": "&#039;"
+      })[char]);
+    }
+
+    function formatDateTime(value) {
+      if (!value) return "-";
+      const date = new Date(value);
+      if (Number.isNaN(date.getTime())) return "-";
+      return date.toLocaleString(document.documentElement.lang || "en", { dateStyle: "medium", timeStyle: "short" });
+    }
+
+    function packageFeatures(pkg) {
+      const refundDays = pkg.id === "starter" ? 30 : 90;
+      const finalFeature = pkg.id === "starter" ? t("featureStarterBest") : pkg.id === "standard" ? t("featureStandardBest") : t("featurePriorityBest");
+      return [
+        t("featureRate", { amount: money(pkg.rate) }),
+        t("featureDeposit", { amount: money(pkg.deposit) }),
+        t("featureAutoRefund", { days: refundDays }),
+        finalFeature
+      ];
+    }
+
+    function toast(message) {
+      const el = $("#toast");
+      el.textContent = message;
+      el.classList.add("show");
+      clearTimeout(toast.timer);
+      toast.timer = setTimeout(() => el.classList.remove("show"), 3200);
+    }
+
+    function currentPackage() {
+      return packages[state.selectedPackage] || packages.standard;
+    }
+
+    function currentEstimate() {
+      return estimates.find((item) => item.id === state.selectedEstimate) || estimates[0];
+    }
+
+    function estimatedCost(item = currentEstimate(), pkg = currentPackage()) {
+      return {
+        min: item.min * pkg.rate,
+        max: item.max * pkg.rate
+      };
+    }
+
+    function averageCost(item = currentEstimate(), pkg = currentPackage()) {
+      return Math.ceil(((item.min + item.max) / 2) * pkg.rate);
+    }
+
+    function renderPricing() {
+      $("#pricingCards").innerHTML = Object.values(packages).map((pkg) => `
+        <article class="price-card ${pkg.id === state.selectedPackage ? "selected" : ""}">
+          ${localPackageText(pkg).badge ? `<span class="price-ribbon">${localPackageText(pkg).badge}</span>` : ""}
+          <h3>${localPackageText(pkg).name}</h3>
+          <p class="desc">${localPackageText(pkg).description}</p>
+          <div class="deposit">${money(pkg.deposit)}</div>
+          <div class="rate">${money(pkg.rate)} ${t("perMinute")}</div>
+          <ul class="feature-list">
+            ${packageFeatures(pkg).map((feature) => `<li>${feature}</li>`).join("")}
+          </ul>
+          <button class="btn ${pkg.id === state.selectedPackage ? "dark" : "secondary"}" type="button" data-package="${pkg.id}">
+            ${pkg.id === state.selectedPackage ? t("selectedPackage") : t("choosePackage")}
+          </button>
+        </article>
+      `).join("");
+      const unit = currency();
+      $("#fxNote").textContent = t("fxNote", { currency: unit.code, rateText: unit.rateText });
+    }
+
+    function renderPackageButtons() {
+      $("#packageButtons").innerHTML = Object.values(packages).map((pkg) => `
+        <button class="select-btn ${pkg.id === state.selectedPackage ? "selected" : ""}" type="button" data-package="${pkg.id}">
+          ${localPackageText(pkg).name}<br><span>${money(pkg.deposit)}</span>
+        </button>
+      `).join("");
+    }
+
+    function iconSvg(type) {
+      if (type === "paypal") {
+        return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M7 19 10 4h5.5c2.4 0 4 1.4 3.5 3.8-.5 2.7-2.4 4.2-5.2 4.2h-2l-1.3 7H7Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M5 21 8 6h4.8" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+      }
+      if (type === "bank") {
+        return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="m4 10 8-5 8 5H4Z" stroke="currentColor" stroke-width="2" stroke-linejoin="round"/><path d="M6 10v7M10 10v7M14 10v7M18 10v7M4 19h16" stroke="currentColor" stroke-width="2" stroke-linecap="round"/></svg>`;
+      }
+      return `<svg viewBox="0 0 24 24" fill="none" aria-hidden="true"><path d="M4 7h16v10H4z" stroke="currentColor" stroke-width="2.1" stroke-linejoin="round"/><path d="M4 10h16M16 14h2" stroke="currentColor" stroke-width="2.1" stroke-linecap="round"/></svg>`;
+    }
+
+    function renderPaymentMethods() {
+      $("#paymentMethods").innerHTML = paymentMethods.map((method) => `
+        <button class="payment-option ${method.id === state.selectedPayment ? "selected" : ""}" type="button" data-payment="${method.id}">
+          ${iconSvg(method.icon)}
+          <span>${methodText(method).name}</span>
+        </button>
+      `).join("");
+      $("#bankInfo").hidden = state.selectedPayment !== "bank";
+    }
+
+    function renderEstimates() {
+      const pkg = currentPackage();
+      $("#estimateTable").innerHTML = `
+        <div class="estimate-row">
+          <span>${t("requestHeader")}</span><span>${t("expectedHeader")}</span><span>${t("costHeader")}</span><span>${t("useHeader")}</span>
+        </div>
+        ${estimates.map((item) => {
+          const cost = estimatedCost(item, pkg);
+          const itemText = localEstimate(item);
+          return `
+            <button class="estimate-row ${item.id === state.selectedEstimate ? "selected" : ""}" type="button" data-estimate="${item.id}">
+              <span class="estimate-name"><b>${itemText.name}</b><span>${itemText.scope}</span></span>
+              <strong>${minuteRange(item)}</strong>
+              <strong>${moneyRange(cost.min, cost.max)}</strong>
+              <span class="estimate-note">${itemText.note}</span>
+            </button>
+          `;
+        }).join("")}
+      `;
+      $("#requestType").innerHTML = estimates.map((item) => `<option value="${item.id}">${localEstimate(item).name}</option>`).join("");
+      $("#requestType").value = state.selectedEstimate;
+    }
+
+    function renderAccount() {
+      const accountPill = $("#accountPill");
+      const status = $("#accountStatus");
+      const pkg = currentPackage();
+      const minutesLeft = state.balance > 0 ? state.balance / pkg.rate : 0;
+      const latest = state.ledger[0];
+      const pkgName = localPackageText(pkg).name;
+
+      if (!state.account) {
+        accountPill.textContent = t("notSignedUp");
+        accountPill.style.background = "rgba(232,75,104,.12)";
+        accountPill.style.color = "#8d2337";
+        status.className = "account-status empty";
+        status.innerHTML = `
+          <span class="small-label">Kall account</span>
+          <h3>${t("accountEmptyTitle")}</h3>
+          <div class="account-meta">${t("accountEmptyMeta")}</div>
+        `;
+      } else {
+        accountPill.textContent = t("signedUp");
+        accountPill.style.background = "rgba(0,167,142,.12)";
+        accountPill.style.color = "#076a59";
+        status.className = "account-status";
+        status.innerHTML = `
+          <span class="small-label">Kall account</span>
+          <h3>${escapeHtml(state.account.fullName)}</h3>
+          <div class="account-meta">
+            <span>${escapeHtml(state.account.email)}</span>
+            <span>${escapeHtml(state.account.phone)}</span>
+            <span>${latest ? `${t("latestActivity")}: ${escapeHtml(latest.label)}` : t("noDepositActivity")}</span>
+          </div>
+          <div class="balance-summary">
+            <div class="balance-box"><span>${t("balance")}</span><b>${money(state.balance)}</b></div>
+            <div class="balance-box"><span>${t("atRate", { plan: pkgName })}</span><b>${minutesLeft.toFixed(1)} ${t("min")}</b></div>
+          </div>
+        `;
+      }
+    }
+
+    function renderCalculator() {
+      const pkg = currentPackage();
+      const item = currentEstimate();
+      const itemText = localEstimate(item);
+      const cost = estimatedCost(item, pkg);
+      $("#calcName").textContent = itemText.name;
+      $("#calcMinutes").textContent = minuteRange(item);
+      $("#calcRate").textContent = `${money(pkg.rate)}/${t("min")}`;
+      $("#calcCost").textContent = moneyRange(cost.min, cost.max);
+      $("#summaryType").textContent = itemText.name;
+      $("#summaryMinutes").textContent = minuteRange(item);
+      $("#summaryCost").textContent = moneyRange(cost.min, cost.max);
+      $("#summaryBalance").textContent = money(state.balance);
+      $("#lockedBox").classList.toggle("visible", !(state.account && state.balance > 0));
+      $("#mockBalanceValue").textContent = money(142500);
+      $("#feedDepositValue").textContent = money(180000);
+    }
+
+    function renderExamples() {
+      $("#exampleGallery").innerHTML = serviceExamples.map((item) => {
+        const title = item.title[lang()] || item.title.en;
+        return `
+          <article class="service-example-card">
+            <img src="${item.image}" alt="${escapeHtml(title)}" loading="lazy">
+            <div class="service-example-body">
+              <b>${escapeHtml(title)}</b>
+              <span>${item.min}-${item.max} ${t("min")}</span>
+            </div>
+          </article>
+        `;
+      }).join("");
+    }
+
+    function portalCard(label, value) {
+      return `<div class="portal-card"><span>${label}</span><b>${value}</b></div>`;
+    }
+
+    function renderMemberPortal() {
+      const portal = $("#memberPortal");
+      const panel = $("#accountTabPanel");
+      portal.hidden = !state.account;
+      if (!state.account) return;
+
+      const tabs = ["details", "billing", "profile"];
+      if (!tabs.includes(state.activeAccountTab)) state.activeAccountTab = "details";
+      $$(".account-tab").forEach((tab) => tab.classList.toggle("active", tab.dataset.accountTab === state.activeAccountTab));
+
+      if (state.activeAccountTab === "details") {
+        if (!state.lastRequest) {
+          panel.innerHTML = `<div class="portal-empty">${t("noReservationYet")}</div>`;
+          return;
+        }
+        const request = state.lastRequest;
+        const requestType = estimates.find((entry) => entry.id === request.estimateId);
+        const requestTypeName = requestType ? localEstimate(requestType).name : request.type || "-";
+        panel.innerHTML = `
+          <div class="portal-grid">
+            ${portalCard(t("reservationNumber"), escapeHtml(request.requestNo))}
+            ${portalCard(t("requestTypeLabel"), escapeHtml(requestTypeName))}
+            ${portalCard(t("requestStatus"), t("resultStatus"))}
+            ${portalCard(t("requestCreated"), formatDateTime(request.createdAt))}
+            ${portalCard(t("requestedPlace"), escapeHtml(request.placeName || "-"))}
+            ${portalCard(t("requestedDate"), escapeHtml(request.date || "-"))}
+            ${portalCard(t("requestedTime"), escapeHtml(request.time || "-"))}
+            ${portalCard(t("requestedPeople"), escapeHtml(request.people || "-"))}
+            ${portalCard(t("bookingNamePortal"), escapeHtml(request.bookingName || "-"))}
+            ${portalCard(t("maxMinuteLimit"), `${escapeHtml(request.maxMinutes)} ${t("min")}`)}
+            ${portalCard(t("usedMinutes"), `${escapeHtml(request.minutes)} ${t("min")}`)}
+            ${portalCard(t("chargedAmount"), money(request.charge))}
+            ${portalCard(t("portalBalance"), money(state.balance))}
+          </div>
+          <div class="portal-note"><b>${t("latestNote")}</b><br>${escapeHtml(request.note || "-")}</div>
+        `;
+        return;
+      }
+
+      if (state.activeAccountTab === "billing") {
+        if (!state.ledger.length) {
+          panel.innerHTML = `<div class="portal-empty">${t("billingEmpty")}</div>`;
+          return;
+        }
+        panel.innerHTML = `
+          <div class="ledger-list">
+            ${state.ledger.map((entry) => `
+              <div class="ledger-row ${entry.amount < 0 ? "negative" : ""}">
+                <div><b>${escapeHtml(entry.label)}</b><span>${formatDateTime(entry.at)}</span></div>
+                <strong>${moneySigned(entry.amount)}</strong>
+              </div>
+            `).join("")}
+          </div>
+        `;
+        return;
+      }
+
+      const pkg = currentPackage();
+      const pkgName = localPackageText(pkg).name;
+      panel.innerHTML = `
+        <div class="portal-grid">
+          ${portalCard(t("profileSummary"), escapeHtml(state.account.fullName || "-"))}
+          ${portalCard(t("portalContact"), `${escapeHtml(state.account.email || "-")}<br>${escapeHtml(state.account.phone || "-")}`)}
+          ${portalCard(t("portalCurrentPlan"), escapeHtml(pkgName))}
+          ${portalCard(t("portalBalance"), money(state.balance))}
+        </div>
+        <div class="portal-note">${state.account.createdAt ? formatDateTime(state.account.createdAt) : ""}</div>
+      `;
+    }
+
+    function renderPolicy() {
+      const policy = policyText[lang()] || policyText.en;
+      $("#chargedList").innerHTML = policy.charged.map((item) => `<li>${item}</li>`).join("");
+      $("#notChargedList").innerHTML = policy.notCharged.map((item) => `<li>${item}</li>`).join("");
+    }
+
+    function renderFaq() {
+      const items = faqText[lang()] || faqText.en;
+      $("#faqList").innerHTML = items.map(([question, answer], index) => `
+        <details ${index === 0 ? "open" : ""}>
+          <summary>${question}</summary>
+          <p>${answer}</p>
+        </details>
+      `).join("");
+    }
+
+    function renderAll() {
+      translateStatic();
+      renderPricing();
+      renderPackageButtons();
+      renderPaymentMethods();
+      renderEstimates();
+      renderAccount();
+      renderCalculator();
+      renderExamples();
+      renderMemberPortal();
+      renderPolicy();
+      renderFaq();
+      saveState();
+    }
+
+    function selectPackage(id) {
+      state.selectedPackage = id;
+      renderAll();
+    }
+
+    function selectEstimate(id) {
+      state.selectedEstimate = id;
+      renderAll();
+    }
+
+    function initMotion() {
+      const sections = $$(".page-section");
+      sections.forEach((section) => section.classList.add("is-visible"));
+      if (!("IntersectionObserver" in window)) return;
+      sections.forEach((section) => section.classList.remove("is-visible"));
+      const revealObserver = new IntersectionObserver((entries) => {
+        entries.forEach((entry) => {
+          if (entry.isIntersecting) entry.target.classList.add("is-visible");
+        });
+      }, { threshold: .12 });
+      sections.forEach((section) => revealObserver.observe(section));
+
+      const stageObserver = new IntersectionObserver((entries) => {
+        const visible = entries.filter((entry) => entry.isIntersecting).sort((a, b) => b.intersectionRatio - a.intersectionRatio)[0];
+        if (visible && visible.target.id) document.body.dataset.stage = visible.target.id;
+      }, { threshold: [.28, .45, .62] });
+      sections.forEach((section) => stageObserver.observe(section));
+    }
+
+    function setMinimumDate() {
+      const date = $("#preferredDate");
+      const today = new Date();
+      today.setMinutes(today.getMinutes() - today.getTimezoneOffset());
+      date.min = today.toISOString().slice(0, 10);
+      if (!date.value) date.value = date.min;
+    }
+
+    $("#menuBtn").addEventListener("click", () => {
+      const nav = $("#siteNav");
+      const open = !nav.classList.contains("open");
+      nav.classList.toggle("open", open);
+      $("#menuBtn").setAttribute("aria-expanded", String(open));
+    });
+
+    $("#siteNav").addEventListener("click", (event) => {
+      if (event.target.closest("a")) {
+        $("#siteNav").classList.remove("open");
+        $("#menuBtn").setAttribute("aria-expanded", "false");
+      }
+    });
+
+    document.addEventListener("click", (event) => {
+      const langBtn = event.target.closest("[data-set-lang]");
+      if (langBtn) {
+        state.lang = langBtn.dataset.setLang;
+        renderAll();
+        return;
+      }
+      const packageBtn = event.target.closest("[data-package]");
+      if (packageBtn) selectPackage(packageBtn.dataset.package);
+      const paymentBtn = event.target.closest("[data-payment]");
+      if (paymentBtn) {
+        state.selectedPayment = paymentBtn.dataset.payment;
+        renderAll();
+      }
+      const accountTab = event.target.closest("[data-account-tab]");
+      if (accountTab) {
+        state.activeAccountTab = accountTab.dataset.accountTab;
+        renderAll();
+      }
+      const estimateBtn = event.target.closest("[data-estimate]");
+      if (estimateBtn) selectEstimate(estimateBtn.dataset.estimate);
+    });
+
+    $("#signupForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      const form = event.currentTarget;
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      state.account = {
+        fullName: $("#fullName").value.trim(),
+        email: $("#email").value.trim(),
+        phone: $("#phone").value.trim(),
+        createdAt: new Date().toISOString()
+      };
+      state.ledger.unshift({ label: t("feedAccountTitle"), amount: 0, at: new Date().toISOString() });
+      renderAll();
+      toast(t("accountSaved"));
+    });
+
+    $("#resetAccountBtn").addEventListener("click", () => {
+      localStorage.removeItem(storageKey);
+      const currentLang = state.lang;
+      Object.assign(state, {
+        lang: currentLang,
+        selectedPackage: "standard",
+        selectedPayment: "card",
+        selectedEstimate: "dinner",
+        activeAccountTab: "details",
+        account: null,
+        balance: 0,
+        lastRequest: null,
+        ledger: []
+      });
+      $("#signupForm").reset();
+      $("#confirmationBox").classList.remove("visible");
+      renderAll();
+      toast(t("demoReset"));
+    });
+
+    $("#addDepositBtn").addEventListener("click", () => {
+      if (!state.account) {
+        toast(t("createBeforeDeposit"));
+        $("#account").scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      const pkg = currentPackage();
+      const method = paymentMethods.find((item) => item.id === state.selectedPayment);
+      const pkgName = localPackageText(pkg).name;
+      const methodName = methodText(method).name;
+      state.balance += pkg.deposit;
+      state.ledger.unshift({
+        label: `${pkgName} ${t("navDeposit")}`,
+        amount: pkg.deposit,
+        at: new Date().toISOString()
+      });
+      renderAll();
+      toast(t("depositAdded", { plan: pkgName, amount: money(pkg.deposit), method: methodName }));
+    });
+
+    $("#requestType").addEventListener("change", (event) => {
+      selectEstimate(event.target.value);
+    });
+
+    $("#requestForm").addEventListener("submit", (event) => {
+      event.preventDefault();
+      if (!state.account) {
+        toast(t("createBeforeRequest"));
+        $("#account").scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      if (state.balance <= 0) {
+        toast(t("addCreditBeforeRequest"));
+        $("#account").scrollIntoView({ behavior: "smooth", block: "start" });
+        return;
+      }
+      const form = event.currentTarget;
+      if (!form.checkValidity()) {
+        form.reportValidity();
+        return;
+      }
+      const item = currentEstimate();
+      const pkg = currentPackage();
+      const maxMinutes = Math.max(1, Number($("#maxMinutes").value || 0));
+      const plannedMinutes = Math.min(maxMinutes, Math.ceil((item.min + item.max) / 2));
+      const charge = plannedMinutes * pkg.rate;
+      if (charge > state.balance) {
+        toast(t("needMoreCredit", { amount: money(charge) }));
+        return;
+      }
+      state.balance -= charge;
+      const requestNo = `KA-${String(Date.now()).slice(-8)}`;
+      state.lastRequest = {
+        requestNo,
+        estimateId: item.id,
+        type: localEstimate(item).name,
+        placeName: $("#placeName").value.trim(),
+        placeLink: $("#placeLink").value.trim(),
+        date: $("#preferredDate").value,
+        time: $("#preferredTime").value,
+        people: $("#people").value.trim(),
+        bookingName: $("#bookingName").value.trim(),
+        note: $("#requestNote").value.trim(),
+        maxMinutes,
+        minutes: plannedMinutes,
+        charge,
+        createdAt: new Date().toISOString()
+      };
+      state.activeAccountTab = "details";
+      state.ledger.unshift({
+        label: `${requestNo} ${t("submitRequest")}, ${plannedMinutes} ${t("min")}`,
+        amount: -charge,
+        at: new Date().toISOString()
+      });
+      renderAll();
+      const confirmation = $("#confirmationBox");
+      confirmation.textContent = t("confirmationText", { requestNo, minutes: plannedMinutes, balance: money(state.balance) });
+      confirmation.classList.add("visible");
+      toast(t("requestSubmitted"));
+    });
+
+    setMinimumDate();
+    if (state.account) {
+      $("#fullName").value = state.account.fullName || "";
+      $("#email").value = state.account.email || "";
+      $("#phone").value = state.account.phone || "";
+    }
+    renderAll();
+    initMotion();
+  </script>
+</body>
+</html>
